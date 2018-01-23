@@ -1,0 +1,11 @@
+# IDE
+.idea
+
+# OS files
+.DS_Store
+
+# Scripts
+run.sh
+
+# Compiled Python scripts used in virtual environment
+*.pyc
