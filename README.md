@@ -53,6 +53,7 @@ Edit the file with the following lines (Note: Do not forget to change the passwo
 sudo docker run -d -ti \
 -e LUNCHMENU_URL="https://janeuzil.cz/api/lunchmenu" \
 -e SPARK_ACCESS_TOKEN="*************************" \
+-e ADMIN_ROOM="********************" \
 -e DB_HOST="127.0.0.1" \
 -e DB_NAME="lunchmenu" \
 -e DB_USER="lunchmenu" \
@@ -72,6 +73,28 @@ $ sudo docker build -t lunchmenu .
 Simply run your created Bash script:
 ```bash
 $ ./run.sh
+```
+
+## Testing
+For coding and testing purposes I have used [PyCharm](https://www.jetbrains.com/pycharm/) with [Docker](https://www.docker.com) running on a public [Ubuntu](https://www.ubuntu.com) server.
+
+To install Docker, run the following command:
+```bash
+$ sudo apt-get install docker.io
+```
+
+Expose the Docker API for remote handling, but only for localhost. For security reasons, we do not want to expose the Docker to the public, we will use SSH tunnel to reach the Docker API. Edit this file:
+```bash
+$ sudo vim /lib/systemd/system/docker.service
+```
+Change the variable **ExecStart** to this value:
+```bash
+ExecStart=/usr/bin/dockerd -H fd:// -H tcp://127.0.0.1:4243 -H unix:///var/run/docker.sock $DOCKER_OPTS
+```
+
+To create a secure SSH tunnel to the server, run the following command:
+```bash
+ssh -f -i ~/.ssh/id_rsa <username>@<host> -L 4243:127.0.0.1:4243 -N
 ```
 
 ## Tunneling
