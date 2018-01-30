@@ -2,6 +2,13 @@
 
 This file is a manually maintained list of changes for each release.
 
+## v0.1.2 (2018-01-30)
+
+- Fully feature lunch menu bot to give you the daily menu
+- Storing user preferred restaurants in the MySQL database
+- Leveraging Zomato API to get the daily menu
+- Translating into desired language
+
 ## v0.1.1 (2018-01-29)
 
 - Simple response tu the user showing bot capabilities

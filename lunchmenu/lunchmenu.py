@@ -7,9 +7,10 @@ import web
 import mysql.connector
 
 from lang import Answers, Commands, LangError
-from sql import Database, User
-from helper import Params
+from sql import Database
+from helper import Params, Zomato
 from ciscosparkapi import CiscoSparkAPI, Webhook, SparkApiError
+from googletrans import Translator
 
 __author__ = "Jan Neuzil"
 __author_email__ = "janeuzil@cisco.com"
@@ -51,9 +52,6 @@ def init_spark():
 
 
 def check_webhooks():
-    # Getting information about me
-    p.me = p.api.people.me()
-
     # Creating webhooks if not existing
     print("INFO: Checking lunch menu webhooks with Spark.")
     required_webhooks = [
@@ -63,7 +61,7 @@ def check_webhooks():
         "memberships deleted"
     ]
     try:
-        webhooks = p.api.webhooks.list()
+        webhooks = p.spark.webhooks.list()
         existing_webhooks = list()
         for hook in webhooks:
             existing_webhooks.append(hook.resource + " " + hook.event)
@@ -73,7 +71,7 @@ def check_webhooks():
 
         # Creating missing webhooks
         for hook in missing_webhooks:
-            p.api.webhooks.create(
+            p.spark.webhooks.create(
                 name=hook,
                 targetUrl=os.environ['LUNCHMENU_URL'],
                 resource=hook.split()[0],
@@ -99,32 +97,45 @@ def init_database():
     except mysql.connector.Error as err:
         system_error(err, "Cannot initialize the database.")
 
+    return db
+
+
+def init_params():
+    # Getting information about me
+    p.me = p.spark.people.me()
+
     # Inserting or updating bot user
     data = (p.me.id, os.environ['ADMIN_ROOM'], p.me.displayName, p.me.emails[0], os.environ['ADMIN_ROOM'])
-    db.insert_user(data)
-    return db
+    p.db.insert_user(data)
+
+    # Initiating Zomato API
+    p.zomato = Zomato(os.environ['ZOMATO_KEY'])
+
+    # Initiating Google Translate API
+    p.google = Translator()
 
 
 def insert_room(data):
     try:
-        room = p.api.rooms.get(data.roomId)
+        room = p.spark.rooms.get(data.roomId)
         print("INFO: New membership created, updating database information.")
     except SparkApiError as err:
-        print("ERROR: Cannot retrieve room '{}' detailed information from Spark.".format(data.roomId))
+        print("ERROR: Cannot retrieve room '{0}' detailed information from Spark.".format(data.roomId))
         print(err)
         return
 
     # Inserting new or updating user
-    u = insert_user(data, room)
+    insert_user(data, room)
 
     # Inserting new room in the database
     room_data = (room.id, data.id, room.title, room.type)
     p.db.insert_room(room_data)
 
-    ans = Answers(u.user_lang)
-    cmd = Commands(u.user_lang)
+    # Sending welcome message in English
+    ans = Answers('en')
+    cmd = Commands('en')
     if room.type == "direct":
-        send_message(data.roomId, ans.welcome_direct.format(u.user_email, cmd.help))
+        send_message(data.roomId, ans.welcome_direct.format(data.personEmail, cmd.help))
     else:
         send_message(data.roomId, ans.welcome_group.format(p.me.emails[0], cmd.help))
 
@@ -138,37 +149,36 @@ def update_room(data):
 def insert_user(data, room):
     # Group conversations is not bind to a specific user, but the bot itself
     if room.type == "group":
-        return User(p.me.id, os.environ['ADMIN_ROOM'], p.me.displayName, p.me.emails[0], "en")
+        return
 
     try:
-        person = p.api.people.get(data.personId)
+        person = p.spark.people.get(data.personId)
     except SparkApiError as err:
-        print("ERROR: Cannot retrieve person '{}' detailed information from Spark.".format(data.personId))
+        print("ERROR: Cannot retrieve person '{0}' detailed information from Spark.".format(data.personId))
         print(err)
         return
 
     print("INFO: Inserting or updating user database.")
     user_data = (person.id, room.id, person.displayName, person.emails[0], room.id)
     p.db.insert_user(user_data)
-    return User(person.id, room.id, person.displayName, person.emails[0], "en")
 
 
 def process_message(data):
-    message = p.api.messages.get(data.id)
+    message = p.spark.messages.get(data.id)
 
     # Loop prevention mechanism, do not respond to my own messages
     if message.personId == p.me.id:
         return
     else:
-        print("INFO: New message: '{}'".format(message.text))
+        print("INFO: New message from <{0}>: '{1}'.".format(message.personEmail, message.text))
         # Get basic information about the user from the database
-        u = p.db.select_user([data.personId])
-        if not u:
-            print("ERROR: Cannot get the user data.")
+        r = p.db.select_room([data.roomId])
+        if not r:
+            print("ERROR: Cannot get the room data.")
             return
         try:
-            ans = Answers(u.user_lang)
-            cmd = Commands(u.user_lang)
+            ans = Answers(r.room_lang)
+            cmd = Commands(r.room_lang)
         except LangError as err:
             print("ERROR: Cannot determine language for the given user.")
             print(err)
@@ -177,21 +187,29 @@ def process_message(data):
         text = message.text
         # Trimming the mention tag
         if data.roomType == "group":
-            text = str().join(text.split()[1:])
+            text = str(" ").join(text.split()[1:])
 
         # Parsing the message received from the user
         msg = parse_message(text)
 
         # Add restaurant command to the list
         if msg['cmd'] == cmd.add:
-            add_rest(u, msg['text'])
+            if not add_rest(r, msg['text']):
+                send_message(r.room_id, ans.bad_search.format(cmd.search, cmd.add))
+            else:
+                send_message(r.room_id, ans.add_success.format(cmd.list))
+
         # Delete restaurant command from the list
         elif msg['cmd'] == cmd.delete:
-            delete_rest(u, msg['text'])
+            if not delete_rest(r, msg['text']):
+                send_message(r.room_id, ans.bad_param)
+            else:
+                send_message(r.room_id, ans.del_success)
+
         # Sends help message
         elif msg['cmd'] == cmd.help:
             help = ans.help.format(
-                u.user_email,
+                data.personEmail,
                 cmd.add,
                 cmd.delete,
                 cmd.help,
@@ -201,34 +219,51 @@ def process_message(data):
                 cmd.search
             )
             send_message(data.roomId, help)
-        # Set menu language
+
+        # Set lunch menu bot language
         elif msg['cmd'] == cmd.lang:
-            set_lang(u, msg['text'])
+            if not ans.check_lang(msg['text']):
+                send_message(r.room_id, ans.lang_unsupported.format(cmd.help))
+            else:
+                set_lang(r, msg['text'])
+
         # List your favourite restaurants
         elif msg['cmd'] == cmd.list:
-            list_rest(u)
+            if not list_rest(r):
+                send_message(r.room_id, ans.list_empty)
+
         # Get the menu from the restaurant
         elif msg['cmd'] == cmd.menu:
-            get_menu(u, msg['text'])
+            if msg['text'][0] == cmd.all:
+                if not get_menus(r, ans.no_menu):
+                    send_message(r.room_id, ans.bad_param)
+            else:
+                rest_id = get_restaurant(r, msg['text'][0])
+                if rest_id == 0:
+                    send_message(r.room_id, ans.bad_param)
+                else:
+                    menu = get_menu(r, rest_id, ans.no_menu)
+                    send_message(r.room_id, menu)
+
         # Search for a restaurant
         elif msg['cmd'] == cmd.search:
-            search_rest(u, msg['text'])
+            if not search_rest(r, msg['text']):
+                send_message(r.room_id, ans.not_found)
         else:
             print("WARNING: Unknown command received, sending the bot capabilities.")
-            send_message(data.roomId, ans.unknown)
+            send_message(r.room_id, ans.unknown)
 
 
 def message_deleted(data):
     try:
-        person = p.api.people.get(data.personId)
+        person = p.spark.people.get(data.personId)
         print("INFO: User " + person.displayName + " has deleted its own message.")
     except SparkApiError as err:
-        print("ERROR: Cannot retrieve person '{}' detailed information from Spark.".format(data.personId))
+        print("ERROR: Cannot retrieve person '{0}' detailed information from Spark.".format(data.personId))
         print(err)
 
 
 def parse_message(text):
-    print(text)
     tmp = text.split()
     if len(tmp) == 0:
         msg = {'cmd': "Unknown"}
@@ -242,39 +277,145 @@ def parse_message(text):
     return msg
 
 
-def add_rest(u, val):
-    # TODO will check if the user used the searched before, adds the the restaurant into the list
-    pass
+def add_rest(r, val):
+    # Finding restaurant ID from the previous search
+    data = (r.room_id, val[0])
+    rest_id = p.db.select_search(data)
+    if not rest_id:
+        return False
+
+    # Getting detailed information about the restaurant
+    res = p.zomato.restaurant(rest_id)
+
+    # Inserting restaurant details in the database of restaurants
+    data = (res['id'], res['name'], res['location']['address'], res['id'])
+    p.db.insert_restaurant(data)
+
+    # Inserting restaurant into the room favourites database
+    data = (r.room_id, res['id'], r.room_id)
+    p.db.insert_favourite(data)
+    return True
 
 
-def delete_rest(u, val):
-    # TODO delete restaurant from the list
-    pass
+def delete_rest(r, val):
+    rest_id = get_restaurant(r, val[0])
+    if rest_id == 0:
+        return False
+
+    # Deleting favourite restaurant based on the restaurant ID
+    data = (r.room_id, rest_id)
+    p.db.delete_favourite(data)
+    return True
 
 
-def get_menu(u, val):
-    # TODO get the daily menu of the restaurant, call Zomato API and then translate it to required language
-    pass
+def get_restaurant(r, val):
+    # Get the list of favourite restaurants based on the given room
+    restaurants = p.db.select_restaurant([r.room_id])
+
+    # No restaurants found
+    if not restaurants:
+        return 0
+
+    # Checking the provided value
+    try:
+        i = int(val)
+    except ValueError:
+        return 0
+
+    # Checking if provided value does not exceeds number of restaurants
+    if i < 0 or i > len(restaurants):
+        return 0
+
+    return restaurants[i-1][0]
 
 
-def list_rest(u):
-    # TODO Select from favourites tables based on the user and printed it in a nice list
-    pass
+def get_menu(r, rest_id, empty):
+    # Get the menus from the Zomato
+    menu = p.zomato.menu(rest_id)
+
+    # Some restaurant do not provide daily menus, this option is available only in Czech Republic
+    if not menu['status'] == "success":
+        return empty
+
+    if not menu['daily_menus']:
+        return empty
+    else:
+        msg = str()
+        for dish in menu['daily_menus'][0]['daily_menu']['dishes']:
+            # Translating dish into desired language using autodetect of Google Translate API
+            translation = p.google.translate(dish['dish']['name'], dest=r.room_lang)
+            msg += "- **{0}** - {1}\n".format(translation.text, dish['dish']['price'])
+        return msg
 
 
-def search_rest(u, val):
-    # TODO Search for restaurant, based on the provided name and adds restaurants in the database
-    pass
+def get_menus(r, empty):
+    # Get the list of all favourite restaurants based on the given room
+    restaurants = p.db.select_restaurant([r.room_id])
+
+    if not restaurants:
+        return False
+
+    menus = str()
+    for rest in restaurants:
+        menus += "## {0}\n\n".format(rest[1])
+        menus += get_menu(r, rest[0], "- **" + empty + "**")
+        menus += "\n\n"
+
+    send_message(r.room_id, menus)
+    return True
 
 
-def set_lang(u, val):
-    # TODO Set the user language
-    pass
+def list_rest(r):
+    # Get the list of favourite restaurants based on the given room
+    restaurants = p.db.select_restaurant([r.room_id])
+
+    # No restaurants found
+    if not restaurants:
+        return False
+
+    i = 1
+    msg = str()
+    for rest in restaurants:
+        msg += "{0}. **{1}** - {2}\n".format(i, rest[1], rest[2])
+        i += 1
+    send_message(r.room_id, msg)
+    return True
+
+
+def search_rest(r, val):
+    # Delete previous search result of given user
+    p.db.delete_search([r.room_id])
+
+    # Search for restaurant by given name
+    res = p.zomato.search(val)
+    i = 1
+    msg = str()
+    for rest in res['restaurants']:
+        data = (r.room_id, rest['restaurant']['id'], i)
+        p.db.insert_search(data)
+        msg += "{0}. **{1}** - {2}\n".format(i, rest['restaurant']['name'], rest['restaurant']['location']['address'])
+        i += 1
+
+    if res['results_found'] > 0:
+        send_message(r.room_id, msg)
+        return True
+    else:
+        return False
+
+
+def set_lang(r, val):
+    # Updating language in the database
+    p.db.update_room(val, r.room_id)
+
+    # Sending message in the newly set language
+    ans = Answers(val)
+    cmd = Commands(val)
+    send_message(r.room_id, ans.lang_set.format(cmd.help))
 
 
 def send_message(room, msg):
     try:
-        p.api.messages.create(roomId=room, markdown=msg)
+        p.spark.messages.create(roomId=room, markdown=msg)
     except SparkApiError as err:
         print("WARNING: Cannot send message to the Spark user.")
         print(err)
@@ -321,9 +462,10 @@ class Lunchmenu(object):
 # Main function starting the web.py web server
 if __name__ == '__main__':
     check_environment()
-    p.api = CiscoSparkAPI()
+    p.spark = CiscoSparkAPI()
     check_webhooks()
     p.db = init_database()
+    init_params()
 
     urls = ('/api/lunchmenu', 'Lunchmenu')
     app = web.application(urls, globals())
