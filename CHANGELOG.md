@@ -2,6 +2,12 @@
 
 This file is a manually maintained list of changes for each release.
 
+## v0.1.4 (2018-01-31)
+
+- Minor bugfix with sending message to itself
+- Fully Turkish language support thanks to [Ozge Kurtaslan](mailto:okurtasl@cisco.com)
+- Fully Polish language support thanks to [Dominik Stefaniak](mailto:dostefan@cisco.com)
+
 ## v0.1.3 (2018-01-31)
 
 - Minor bugfix with setting different language and encoding

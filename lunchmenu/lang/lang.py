@@ -2,70 +2,15 @@
 class Answers(object):
     def __init__(self, lang):
         self.languages = (
-            "ar",
             "cs",
             "en",
             "hr",
-            "sk"
+            "pl",
+            "sk",
+            "tr"
         )
-        if lang == "ar":
-            self.help = (
-                "Hello <@personEmail:{0}>, would you like to know the lunch menu?\n\n"
-                "List of commands:\n\n"
-                "- **{1}  &lt;number&gt;** - to add a favourite restaurant to the personal list\n" +
-                "- **{2} &lt;number&gt;** - to delete a favourite restaurant from the personal list\n"
-                "- **{3}** - to show this help\n"
-                "- **{4} &lt;language&gt;** - to set the language\n"
-                "- **{5}** - to list your favourite restaurants\n"
-                "- **{6} &lt;number&gt;** - to get the lunch menu\n"
-                "- **{7} &lt;name&gt;** - to search for a restaurants\n\n"
-                "Glossary:\n"
-                "- **&lt;argument&gt;** - mandatory argument\n\n"
-                "Examples:\n"
-                "- **{7} Moe's Tavern** - will display list of restaurants Moe's Tavern and their addresses\n"
-                "- **{1} 2** - will add second restaurant from the previous search in the list\n"
-                "- **{6} 1** - will show the lunch menu for the restaurant first in your list\n"
-                "- **{2} {8}** - will print all the daily menus of your favourite restaurants\n\n"
-                "Supported languages:\n"
-                "- **ar** - Arabic\n"
-                "- **cs** - Czech\n"
-                "- **hr** - Croatian\n"
-                "- **en** - English\n"
-                "- **sk** - Slovak\n"
-            )
-            self.welcome_direct = (
-                "Hello <@personEmail:{0}>, I am the lunch menu bot.\n\n"
-                "Type **{1}** for list of commands."
-            )
-            self.welcome_group = (
-                "Hello, I am the lunch menu bot.\n\nType **<@personEmail:{0}> {1}** for list of commands.\n\n"
-                "Keep in mind, that this is a group room. I answer only if I am mentioned using **'@'**."
-            )
-            self.unknown = "I am sorry, I do not understand. Please type **{0}** to get list of commands."
-            self.not_found = "I am sorry, but based on your input, no restaurant could be found."
-            self.bad_search = (
-                "I am sorry, but you must first provide a number based from your previous search result.\n\n"
-                "Try to type **{0} &lt;name&gt;** to get the numbered list of restaurants based "
-                "on the provided name and then **{1} &lt;number&gt;** to add this restaurant into your favourites."
-            )
-            self.add_success = (
-                "Restaurant successfully added into your favourite list. Type **{0}** to see your list "
-                "of favourite restaurants."
-            )
-            self.list_empty = "No favourite restaurants found, please add at least one before using this command."
-            self.bad_param = (
-                "I am sorry, but I cannot find selected restaurant. Incorrect number provided "
-                "or no matching restaurant in your list of favourites."
-            )
-            self.del_success = "Restaurant successfully deleted from the list of your favourite restaurants."
-            self.lang_set = "Language successfully set. Type **{0}** to see new list of commands in your language."
-            self.lang_unsupported = (
-                "Cannot determine the language or this language is not supported yet. "
-                "Type **{0}** to see the list of supported languages."
-            )
-            self.no_menu = "I am sorry, but this restaurant does not provide a daily menu today."
 
-        elif lang == "cs":
+        if lang == "cs":
             self.help = (
                 "Dobrý den <@personEmail:{0}>, chcete vědět, co mají dnes dobrého k obědu?\n\n"
                 "Seznam příkazů:\n\n"
@@ -82,13 +27,12 @@ class Answers(object):
                 "- **{7} U Očka** - zobrazí seznam restaurací s názvem U Očka a jejich adresy\n"
                 "- **{1} 2** - přidá druhou restauraci z předchozího hledání na Váš seznam\n"
                 "- **{6} 1** - zobrazí denní menu restaurace na druhé pozici ve Vašem seznamu\n"
-                "- **{2} {8}** - zobrazí všechna denní menu restaurací z Vašeho seznamu\n\n"
+                "- **{6} {8}** - zobrazí všechna denní menu restaurací z Vašeho seznamu\n\n"
                 "Podporované jazyky:\n"
-                "- **ar** - Arabština\n"
-                "- **cs** - Čeština\n"
-                "- **hr** - Chorvatština\n"
-                "- **en** - Angličtina\n"
-                "- **sk** - Slovenština\n"
+                "- **cs** - čeština\n"
+                "- **hr** - chorvatština\n"
+                "- **en** - angličtina\n"
+                "- **sk** - slovenština\n"
             )
             self.unknown = "Omlouvám se, ale nerozumím. Zadejte prosím **{0}** pro seznam příkazů."
             self.not_found = "Omlouvám se, ale na základě zadaného názvu nebyla nalezena žádná restaurace."
@@ -136,13 +80,14 @@ class Answers(object):
                     "- **{7} Moe's Tavern** - will display list of restaurants Moe's Tavern and their addresses\n"
                     "- **{1} 2** - will add second restaurant from the previous search in the list\n"
                     "- **{6} 1** - will show the lunch menu for the restaurant first in your list\n"
-                    "- **{2} {8}** - will print all the daily menus of your favourite restaurants\n\n"
+                    "- **{6} {8}** - will print all the daily menus of your favourite restaurants\n\n"
                     "Supported languages:\n"
-                    "- **ar** - Arabic\n"
                     "- **cs** - Czech\n"
                     "- **hr** - Croatian\n"
                     "- **en** - English\n"
+                    "- **pl** - Polish\n"
                     "- **sk** - Slovak\n"
+                    "- **tr** - Turkish\n"
             )
             self.welcome_direct = (
                 "Hello <@personEmail:{0}>, I am the lunch menu bot.\n\n"
@@ -193,21 +138,14 @@ class Answers(object):
                     "- **{7} Moe's Tavern** - will display list of restaurants Moe's Tavern and their addresses\n"
                     "- **{1} 2** - will add second restaurant from the previous search in the list\n"
                     "- **{6} 1** - will show the lunch menu for the restaurant first in your list\n"
-                    "- **{2} {8}** - will print all the daily menus of your favourite restaurants\n\n"
+                    "- **{6} {8}** - will print all the daily menus of your favourite restaurants\n\n"
                     "Supported languages:\n"
-                    "- **ar** - Arabic\n"
                     "- **cs** - Czech\n"
                     "- **hr** - Croatian\n"
                     "- **en** - English\n"
+                    "- **pl** - Polish\n"
                     "- **sk** - Slovak\n"
-            )
-            self.welcome_direct = (
-                "Hello <@personEmail:{0}>, I am the lunch menu bot.\n\n"
-                "Type **{1}** for list of commands."
-            )
-            self.welcome_group = (
-                "Hello, I am the lunch menu bot.\n\nType **<@personEmail:{0}> {1}** for list of commands.\n\n"
-                "Keep in mind, that this is a group room. I answer only if I am mentioned using **'@'**."
+                    "- **tr** - Turkish\n"
             )
             self.unknown = "I am sorry, I do not understand. Please type **{0}** to get list of commands."
             self.not_found = "I am sorry, but based on your input, no restaurant could be found."
@@ -233,6 +171,60 @@ class Answers(object):
             )
             self.no_menu = "I am sorry, but this restaurant does not provide a daily menu today."
 
+        elif lang == "pl":
+            self.help = (
+                    "Witaj <@personEmail:{0}>, czy chciałbyś poznać menu lunchowe?\n\n"
+                    "Lista poleceń:\n\n"
+                    "- **{1}  &lt;numer&gt;** - dodanie ulubionej restauracji do osobistej listy\n" +
+                    "- **{2} &lt;numer&gt;** - usuwanie ulubionej restauracji z osobistej listy\n"
+                    "- **{3}** - wyświetlenie tej pomocy\n"
+                    "- **{4} &lt;język&gt;** - zmiana języka\n"
+                    "- **{5}** - wyświetlenie listy Twoich ulubionych restauracji\n"
+                    "- **{6} &lt;numer&gt;** - wyświetlenie menu lunchowego\n"
+                    "- **{7} &lt;imię&gt;** - wyszukanie restauracji\n\n"
+                    "Słownik:\n"
+                    "- **&lt;argument&gt;** - wymagany argument\n\n"
+                    "Przykłady:\n"
+                    "- **{7} Moe's Tavern** - wyświetlenie listy restauracji Moe's Tavern i ich adresów\n"
+                    "- **{1} 2** - dodanie drugiej restauracji z wyników wyszukiwania do listy ulubionych restauracji\n"
+                    "- **{6} 1** - wyświetlenie menu lunchowego pierwszej restauracji z listy ulubionych restauracji\n"
+                    "- **{6} {8}** - wyświetlenie menu lunchowych wszystkich restauracji z listy\n\n"
+                    "Obsługiwane języki:\n"
+                    "- **cs** - czeski\n"
+                    "- **hr** - chorwacki\n"
+                    "- **en** - angielski\n"
+                    "- **pl** - polski\n"
+                    "- **sk** - słowacki\n"
+                    "- **tr** - turecki\n"
+            )
+            self.unknown = "Wybacz, nie rozumiem. Wpisz **{0}** aby wyświetlić listę komend."
+            self.not_found = "Wybacz, nie znaleziono żadnych restauracji pasujących do Twojego zapytania."
+            self.bad_search = (
+                "Wybacz, najpierw musisz podać liczbę z poprzedniego wyszukiwania.\n\n"
+                "Spróbuj wpisać **{0} &lt;name&gt;** aby uzyskać ponumerowaną listę restauracji "
+                "na podstawię podanej nazwy, a następnie **{1} &lt;number&gt;** aby dodać restaurację "
+                "do listy Twoich ulubionych restauracji."
+            )
+            self.add_success = (
+                "Restautacja została dodana do Twojej listy. Wpisz **{0}** aby zobaczyś swoją listę "
+                "ulubionych restauracji."
+            )
+            self.list_empty = (
+                "Nie znaleziono żadnych ulubionych restautacji, dodaj przynajmniej "
+                "jedną przed wpisaniem tej komendy."
+            )
+            self.bad_param = (
+                "Wybacz, nie mogę znaleźć wybranej restauracji. Podano niepoprawną liczbę,"
+                "lub pasującej restauracji w liście ulubionych restauracji."
+            )
+            self.del_success = "Restauracja pomyślnie usunięta z listy ulub ionych restauracji."
+            self.lang_set = "Język pomyślnie wybrany. Wpisz **{0}** by zobaczyć nową listę komend w Twoim języku."
+            self.lang_unsupported = (
+                "Nie można określić języka, lub wybrany język nie jest wspierany."
+                "Wpisz **{0}** aby zpbaczyć listę wspieranych języków."
+            )
+            self.no_menu = "Wybacz, ta restauracjia nie udostępniła dzisiaj swojego dziennego menu."
+
         elif lang == "sk":
             self.help = (
                     "Dobrý den <@personEmail:{0}>, chcete vědět, co mají dnes dobrého k obědu?\n\n"
@@ -250,9 +242,8 @@ class Answers(object):
                     "- **{7} U Očka** - zobrazí seznam restaurací s názvem U Očka a jejich adresy\n"
                     "- **{1} 2** - přidá druhou restauraci z předchozího hledání na Váš seznam\n"
                     "- **{6} 1** - zobrazí denní menu restaurace na druhé pozici ve Vašem seznamu\n"
-                    "- **{2} {8}** - zobrazí všechna denní menu restaurací z Vašeho seznamu\n\n"
+                    "- **{6} {8}** - zobrazí všechna denní menu restaurací z Vašeho seznamu\n\n"
                     "Podporované jazyky:\n"
-                    "- **ar** - Arabština\n"
                     "- **cs** - Čeština\n"
                     "- **hr** - Chorvatština\n"
                     "- **en** - Angličtina\n"
@@ -287,6 +278,55 @@ class Answers(object):
             )
             self.no_menu = "Omlouvám se, ale tato restaurace dnes nenabízí žádné denní menu."
 
+        elif lang == "tr":
+            self.help = (
+                    "Merhaba <@personEmail:{0}>, oğlen menüsünü öğrenmek ister misiniz?\n\n"
+                    "Komut listesi:\n\n"
+                    "- **{1}  &lt;sayı&gt;** - Beğendiğiniz restoranları kişisel listenize ekleyin\n" +
+                    "- **{2} &lt;sayı&gt;** - Restoranları kişisel listenizden silin\n"
+                    "- **{3}** - Neler yapabileceğimi görün\n"
+                    "- **{4} &lt;dil&gt;** - Dili değiştirin\n"
+                    "- **{5}** - Kişisel restoran listenizi görüntüleyin\n"
+                    "- **{6} &lt;sayı&gt;** - Ögle menüsünü oğrenin\n"
+                    "- **{7} &lt;isim&gt;** - Restoranları arayın\n\n"
+                    "Terimler:\n"
+                    "- **&lt;terim&gt;** - Zorunlu terimler\n\n"
+                    "Örnekler:\n"
+                    "- **{7} Moe's Tavern** - Moe's Tavern isimli restoranları ve adreslerini gösterir\n"
+                    "- **{1} 2** - Arama listesindeki ikinci restoranı kişisel listenize ekler\n"
+                    "- **{6} 1** - Kişisel listenizdeki ilk restoranın öğle menüsünü gösterir\n"
+                    "- **{6} {8}** - Kişisel listenizdeki tüm restoranların öğle menüsünü gösterir\n\n"
+                    "Desteklenen diller:\n"
+                    "- **ar** - Arapça\n"
+                    "- **cs** - Çekçe\n"
+                    "- **hr** - Hırvatça\n"
+                    "- **en** - İngilizce\n"
+                    "- **pl** - Polonya\n"
+                    "- **sk** - Slovakça\n"
+                    "- **tr** - Türk\n"
+            )
+            self.unknown = "Üzgünüm, anlayamadım. **{0}** yazarak tüm komutları görüntüleyin."
+            self.not_found = "Üzgünüm, aradığınız restoran bulunamadı."
+            self.bad_search = (
+                "Öncelikle az önceki aramanıza göre bir sayı belirtin.\n\n"
+                "**{0} &lt;isim&gt;** yazarak restoranların listesini görüntüleyin. "
+                "Belirtilen isim ve **{1} &lt;number&gt;** restoranı restoran listenize ekler."
+            )
+            self.add_success = (
+                "Restoran başarıyla listenize eklendi. **{0}** yazarak en sevdiğiniz restoranları görüntüleyin."
+            )
+            self.list_empty = "Favori restoranlarınız bulunamadı. Önce listenize restoranları ekleyin."
+            self.bad_param = (
+                "Üzgünüm, aradığınız restoran numarası bulunamadı. Sayı veya restoran ismi yanlış."
+            )
+            self.del_success = "Restoran başarıyla listenizden silindi."
+            self.lang_set = "Dil ayarı başarıyla değiştirildi. **{0}** yazarak dilinizdeki komutları görüntüleyin."
+            self.lang_unsupported = (
+                "Dil algılanamadı veya bu henüz desteklenmeyen bir dil. "
+                "**{0}** yazarak desteklenen tüm dilleri görüntüleyin."
+            )
+            self.no_menu = "Üzgünüm, aradığınız restoran bugün öğle menüsü sunmamaktadır."
+
         else:
             raise LangError("Unsupported language - {0}.".format(lang))
 
@@ -299,17 +339,7 @@ class Answers(object):
 
 class Commands(object):
     def __init__(self, lang):
-        if lang == "ar":
-            self.add = "add"
-            self.all = "all"
-            self.delete = "delete"
-            self.help = "help"
-            self.lang = "lang"
-            self.list = "list"
-            self.menu = "menu"
-            self.search = "search"
-
-        elif lang == "cs":
+        if lang == "cs":
             self.add = "pridat"
             self.all = "vse"
             self.delete = "odebrat"
@@ -339,6 +369,16 @@ class Commands(object):
             self.menu = "menu"
             self.search = "search"
 
+        elif lang == "pl":
+            self.add = "dodaj"
+            self.all = "wszystkie"
+            self.delete = "usun"
+            self.help = "pomoc"
+            self.lang = "jezyk"
+            self.list = "lista"
+            self.menu = "menu"
+            self.search = "wyszukaj"
+
         elif lang == "sk":
             self.add = "add"
             self.all = "all"
@@ -348,6 +388,16 @@ class Commands(object):
             self.list = "list"
             self.menu = "menu"
             self.search = "search"
+
+        elif lang == "tr":
+            self.add = "ekle"
+            self.all = "hepsi"
+            self.delete = "sil"
+            self.help = "yardim"
+            self.lang = "dil"
+            self.list = "liste"
+            self.menu = "menu"
+            self.search = "ara"
 
         else:
             raise LangError("Unsupported language - {0}.".format(lang))

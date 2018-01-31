@@ -437,8 +437,11 @@ class Lunchmenu(object):
             print(err)
             return
 
-        if webhook.data.personId != p.me.id:
-            print("INFO: Spark webhook received - {} {}.".format(webhook.resource, webhook.event))
+        # Loop prevention, do not react to events triggered by myself
+        if webhook.data.personId == p.me.id:
+            return
+
+        print("INFO: Spark webhook received - {} {}.".format(webhook.resource, webhook.event))
 
         # Memberships event
         if webhook.resource == "memberships":
