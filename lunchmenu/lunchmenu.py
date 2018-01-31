@@ -216,16 +216,17 @@ def process_message(data):
                 cmd.lang,
                 cmd.list,
                 cmd.menu,
-                cmd.search
+                cmd.search,
+                cmd.all
             )
             send_message(data.roomId, help)
 
         # Set lunch menu bot language
         elif msg['cmd'] == cmd.lang:
-            if not ans.check_lang(msg['text']):
+            if not ans.check_lang(msg['text'][0]):
                 send_message(r.room_id, ans.lang_unsupported.format(cmd.help))
             else:
-                set_lang(r, msg['text'])
+                set_lang(r, msg['text'][0])
 
         # List your favourite restaurants
         elif msg['cmd'] == cmd.list:
@@ -251,7 +252,7 @@ def process_message(data):
                 send_message(r.room_id, ans.not_found)
         else:
             print("WARNING: Unknown command received, sending the bot capabilities.")
-            send_message(r.room_id, ans.unknown)
+            send_message(r.room_id, ans.unknown.format(cmd.help))
 
 
 def message_deleted(data):
@@ -355,10 +356,12 @@ def get_menus(r, empty):
     if not restaurants:
         return False
 
+    # Due to error with language encoding, the line has to be decoded first
+    empty = "- **" + empty.decode('utf-8') + "**"
     menus = str()
     for rest in restaurants:
         menus += "## {0}\n\n".format(rest[1])
-        menus += get_menu(r, rest[0], "- **" + empty + "**")
+        menus += get_menu(r, rest[0], empty)
         menus += "\n\n"
 
     send_message(r.room_id, menus)
@@ -403,13 +406,14 @@ def search_rest(r, val):
         return False
 
 
-def set_lang(r, val):
+def set_lang(r, lang):
     # Updating language in the database
-    p.db.update_room(val, r.room_id)
+    data = (lang, r.room_id)
+    p.db.update_lang(data)
 
     # Sending message in the newly set language
-    ans = Answers(val)
-    cmd = Commands(val)
+    ans = Answers(lang)
+    cmd = Commands(lang)
     send_message(r.room_id, ans.lang_set.format(cmd.help))
 
 

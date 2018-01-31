@@ -2,6 +2,12 @@
 
 This file is a manually maintained list of changes for each release.
 
+## v0.1.3 (2018-01-31)
+
+- Minor bugfix with setting different language and encoding
+- Fully Czech language support
+- Preparation for other languages
+
 ## v0.1.2 (2018-01-30)
 
 - Fully feature lunch menu bot to give you the daily menu

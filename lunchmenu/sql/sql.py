@@ -92,10 +92,10 @@ class Database(object):
         self.__commit_sql(self.__insert.insert_search(), data)
 
     def update_room(self, data):
-        self.__commit_sql(self.__update.update_room, data)
+        self.__commit_sql(self.__update.update_room(), data)
 
     def update_lang(self, data):
-        self.__commit_sql(self.__update.update_lang, data)
+        self.__commit_sql(self.__update.update_lang(), data)
 
     def select_room(self, data):
         result = self.__query_sql(self.__select.select_room(), data)
