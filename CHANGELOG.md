@@ -2,6 +2,10 @@
 
 This file is a manually maintained list of changes for each release.
 
+## v0.1.6 (2018-02-01)
+
+- Fully Croatian language support
+
 ## v0.1.5 (2018-02-01)
 
 - Fully Slovak language support

@@ -125,53 +125,56 @@ class Answers(object):
 
         elif lang == "hr":
             self.help = (
-                    "Hello <@personEmail:{0}>, would you like to know the lunch menu?\n\n"
-                    "List of commands:\n\n"
-                    "- **{1}  &lt;number&gt;** - to add a favourite restaurant to the personal list\n" +
-                    "- **{2} &lt;number&gt;** - to delete a favourite restaurant from the personal list\n"
-                    "- **{3}** - to show this help\n"
-                    "- **{4} &lt;language&gt;** - to set the language\n"
-                    "- **{5}** - to list your favourite restaurants\n"
-                    "- **{6} &lt;number&gt;** - to get the lunch menu\n"
-                    "- **{7} &lt;name&gt;** - to search for a restaurants\n\n"
-                    "Glossary:\n"
-                    "- **&lt;argument&gt;** - mandatory argument\n\n"
-                    "Examples:\n"
-                    "- **{7} Moe's Tavern** - will display list of restaurants Moe's Tavern and their addresses\n"
-                    "- **{1} 2** - will add second restaurant from the previous search in the list\n"
-                    "- **{6} 1** - will show the lunch menu for the restaurant first in your list\n"
-                    "- **{6} {8}** - will print all the daily menus of your favourite restaurants\n\n"
-                    "Supported languages:\n"
-                    "- **cs** - Czech\n"
-                    "- **hr** - Croatian\n"
-                    "- **en** - English\n"
-                    "- **pl** - Polish\n"
-                    "- **sk** - Slovak\n"
-                    "- **tr** - Turkish\n"
+                    "Bok <@personEmail:{0}>, želiš li znati dnevni meni?\n\n"
+                    "Lista naredbi:\n\n"
+                    "- **{1}  &lt;number&gt;** - za dodavanje omiljenog restorana u personaliziranu listu\n" +
+                    "- **{2} &lt;number&gt;** - za brisanje restorana iz personalizirane liste\n"
+                    "- **{3}** - za prikaz pomoći\n"
+                    "- **{4} &lt;language&gt;** - za postavljanje jezika\n"
+                    "- **{5}** - za ispis tvojih omiljenih restorana\n"
+                    "- **{6} &lt;number&gt;** - za prikaz dnevnog menija\n"
+                    "- **{7} &lt;name&gt;** - za pretragu restorana\n\n"
+                    "Glosar:\n"
+                    "- **&lt;argument&gt;** - obavezni argument\n\n"
+                    "Primjeri:\n"
+                    "- **{7} Mrzla Piva** - će ispisati sve restorane s imenom Mrzla Piva i njihove adrese\n"
+                    "- **{1} 2** - će dodati restoran pod rednim brojem 2 iz prethodne pretrage\n"
+                    "- **{6} 1** - će prikazati dnevni meni za prvi restoran u tvojoj listi\n"
+                    "- **{6} {8}** - će ispisati sve dnevne menije tvojih omiljenih restorana\n\n"
+                    "Podržani jezici:\n"
+                    "- **cs** - Češki\n"
+                    "- **hr** - Hrvatski\n"
+                    "- **en** - Engleski\n"
+                    "- **pl** - Polirati\n"
+                    "- **sk** - Slovački\n"
+                    "- **tr** - Turski"
             )
-            self.unknown = "I am sorry, I do not understand. Please type **{0}** to get list of commands."
-            self.not_found = "I am sorry, but based on your input, no restaurant could be found."
+            self.unknown = "Oprosti, ne razumijem. Molim te utipkaj **{0}** za listu naredbi."
+            self.not_found = "Oprosti, ali za tvoj unos ni jedan restoran nije pronađen."
             self.bad_search = (
-                "I am sorry, but you must first provide a number based from your previous search result.\n\n"
-                "Try to type **{0} &lt;name&gt;** to get the numbered list of restaurants based "
-                "on the provided name and then **{1} &lt;number&gt;** to add this restaurant into your favourites."
+                "Oprosti, ali najprije moraš odabrati broj iz rezultata pretrage.\n\n"
+                "Pokušaj utipkati **{0} &lt;name&gt;** za prikaz numerirane liste restorana temeljen "
+                "na imenu i tada **{1} &lt;number&gt;** kako bi taj restoran dodao u listu svojih omiljenih restorana."
             )
             self.add_success = (
-                "Restaurant successfully added into your favourite list. Type **{0}** to see your list "
-                "of favourite restaurants."
+                "Restran je uspješno dodan u tvoju listu omiljenih restorana. Utipkaj **{0}** za pregled liste "
+                "omiljenih restorana."
             )
-            self.list_empty = "No favourite restaurants found, please add at least one before using this command."
+            self.list_empty = (
+                "Nisu nađeni restorani u listi omiljenih, molim te dodaj barem jedan restoran u listu "
+                "omiljenih prije korištenja ove naredbe."
+            )
             self.bad_param = (
-                "I am sorry, but I cannot find selected restaurant. Incorrect number provided "
-                "or no matching restaurant in your list of favourites."
+                "Oprosti, ali ne mogu naći odabrani restoran, utipkan je pogrešan broj "
+                "ili ne postoji podudarajući restoran u tvojoj listi."
             )
-            self.del_success = "Restaurant successfully deleted from the list of your favourite restaurants."
-            self.lang_set = "Language successfully set. Type **{0}** to see new list of commands in your language."
+            self.del_success = "Restoran uspješno izbrisan iz liste tvojih omiljenih restorana."
+            self.lang_set = "Jezik uspješno promijenjen. Utipkaj **{0}** za prikaz liste naredbi na tvom jeziku."
             self.lang_unsupported = (
-                "Cannot determine the language or this language is not supported yet. "
-                "Type **{0}** to see the list of supported languages."
+                "Ne mogu utvrditi jezik ili taj jezik nije podržan. "
+                "Utipkaj **{0}** za listu podržanih jezika."
             )
-            self.no_menu = "I am sorry, but this restaurant does not provide a daily menu today."
+            self.no_menu = "Orosti, ali ovaj restoran ne nudi dnevni meni za danas."
 
         elif lang == "pl":
             self.help = (
@@ -363,14 +366,14 @@ class Commands(object):
             self.search = "search"
 
         elif lang == "hr":
-            self.add = "add"
-            self.all = "all"
-            self.delete = "delete"
-            self.help = "help"
-            self.lang = "lang"
-            self.list = "list"
-            self.menu = "menu"
-            self.search = "search"
+            self.add = "dodaj"
+            self.all = "sve"
+            self.delete = "izbrisi"
+            self.help = "pomoc"
+            self.lang = "jezik"
+            self.list = "lista"
+            self.menu = "meni"
+            self.search = "pretraga"
 
         elif lang == "pl":
             self.add = "dodaj"
