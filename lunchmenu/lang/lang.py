@@ -32,7 +32,9 @@ class Answers(object):
                 "- **cs** - čeština\n"
                 "- **hr** - chorvatština\n"
                 "- **en** - angličtina\n"
+                "- **pl** - polština\n"
                 "- **sk** - slovenština\n"
+                "- **tr** - turečtina\n"
             )
             self.unknown = "Omlouvám se, ale nerozumím. Zadejte prosím **{0}** pro seznam příkazů."
             self.not_found = "Omlouvám se, ale na základě zadaného názvu nebyla nalezena žádná restaurace."
@@ -227,56 +229,57 @@ class Answers(object):
 
         elif lang == "sk":
             self.help = (
-                    "Dobrý den <@personEmail:{0}>, chcete vědět, co mají dnes dobrého k obědu?\n\n"
-                    "Seznam příkazů:\n\n"
-                    "- **{1}  &lt;číslo&gt;** - přidá zařízení na Váš seznam oblíbených restaurací\n" +
-                    "- **{2} &lt;číslo&gt;** - odebere zařízení z Vašeho seznamu oblíbených restaurací\n"
-                    "- **{3}** - zobrazí tuto nápovědu\n"
+                    "Dobrý deň <@personEmail:{0}>, chcete vediet, čo majú dnes dobré na obed?\n\n"
+                    "Zoznam príkazov:\n\n"
+                    "- **{1}  &lt;číslo&gt;** - pridá zariadenie na Váš zoznam obľúbených reštaurácií\n" +
+                    "- **{2} &lt;číslo&gt;** - odoberie zariadenie z Vášho zoznamu obľúbených reštaurácií\n"
+                    "- **{3}** - zobrazí túto nápovedu\n"
                     "- **{4} &lt;jazyk&gt;** - nastaví jazyk\n"
-                    "- **{5}** - zobrazí seznam Vašich oblíbených restaurací\n"
-                    "- **{6} &lt;číslo&gt;** - zobrazí denní menu zvolené restaurace\n"
-                    "- **{7} &lt;název&gt;** - vyhledá seznam restaurací na základě uvedeného názvu\n\n"
-                    "Vysvětlivky:\n"
+                    "- **{5}** - zobrazí zoznam Vaších obľúbených reštaurácií\n"
+                    "- **{6} &lt;číslo&gt;** - zobrazí denné menu zvolenej reštaurácie\n"
+                    "- **{7} &lt;názov&gt;** - vyhľadá zoznam reštaurácií na základe uvedeného názvu\n\n"
+                    "Vysvetlivky:\n"
                     "- **&lt;argument&gt;** - povinný argument\n\n"
-                    "Příklady:\n"
-                    "- **{7} U Očka** - zobrazí seznam restaurací s názvem U Očka a jejich adresy\n"
-                    "- **{1} 2** - přidá druhou restauraci z předchozího hledání na Váš seznam\n"
-                    "- **{6} 1** - zobrazí denní menu restaurace na druhé pozici ve Vašem seznamu\n"
-                    "- **{6} {8}** - zobrazí všechna denní menu restaurací z Vašeho seznamu\n\n"
+                    "Príklady:\n"
+                    "- **{7} U Očka** - zobrazí zoznam reštaurácií s názvom U Očka a ich adresy\n"
+                    "- **{1} 2** - pridá druhú reštauráciu z predchádzajúceho hľadania na Váš zoznam\n"
+                    "- **{6} 1** - zobrazí denné menu reštaurácie na druhej pozícií vo Vašom zozname\n"
+                    "- **{6} {8}** - zobrazí všetky denné menu reštaurácií z Vášho zoznamu\n\n"
                     "Podporované jazyky:\n"
-                    "- **cs** - Čeština\n"
-                    "- **hr** - Chorvatština\n"
-                    "- **en** - Angličtina\n"
-                    "- **sk** - Slovenština\n"
+                    "- **cs** - čeština\n"
+                    "- **hr** - chorvátčina\n"
+                    "- **en** - angličtina\n"
+                    "- **pl** - polština\n"
+                    "- **sk** - slovenčina\n"
+                    "- **tr** - turečtina\n"
             )
-            self.unknown = "Omlouvám se, ale nerozumím. Zadejte prosím **{0}** pro seznam příkazů."
-            self.not_found = "Omlouvám se, ale na základě zadaného názvu nebyla nalezena žádná restaurace."
+            self.unknown = "Ospravedlňujem sa, ale nerozumiem. Zadajte prosím **{0}** pre zoznam príkazov."
+            self.not_found = "Je mi to ľúto, ale na základe zadaného názvu nebola nájdená žiadna reštaurácia."
             self.bad_search = (
-                "Omlouvám se, ale musíte nejprve zadat číslo restaurace na základě minulého hledání.\n\n"
-                "Zkuste zadat  **{0} &lt;název&gt;** pro získání číselného seznamu restaurací na základě zadaného "
-                "názvu a poté **{1} &lt;číslo&gt;** k přídání zařízení na seznam Vašich oblíbených restaurací."
+                "Ospravedlňujem sa, ale musíte nejskôr zadať číslo reštaurácie na základe minulého hľadania.\n\n"
+                "Skúste zadať  **{0} &lt;názov&gt;** pre získanie číselného zoznamu reštaurácie na základe zadaného "
+                "názvu a potom **{1} &lt;číslo&gt;** k pridaniu zariadenia na zoznam Vašich obľúbených reštaurácií."
             )
             self.add_success = (
-                "Zařízení bylo úspešně přidáno na seznam oblíbených zařízení. Zadejte **{0}** pro zobrazení seznamu "
-                "Vašich oblíbencýh restaurací."
+                "Stravovacie zariadenie bolo úspešne pridané do zoznamu obľúbených reštaurácií. Zadajte **{0}** pre zobrazenie zoznamu "
+                "Vašich obľúbených reštaurácií."
             )
             self.list_empty = (
-                "Nebyly nalezeny žádné oblíbené restaurace, prosím přidejte do seznamu alespoň jednu před použítím "
-                "tohoto příkazu."
+                "Neboli nájdené žiadne obľúbené reštaurácie, prosím pridajte do zoznamu aspoň jednu pred použitím tohoto príkazu."
             )
             self.bad_param = (
-                "Omlouvám se, ale nemohu najít požadovanou restauraci. Zadáné číslo restaurace neodpovídá žádnému "
-                "zařízení z Vašeho seznamu."
+                "Je mi to ľúto, ale nemôžem nájsť požadovanú reštauráciu. Zadané číslo reštaurácie nezodpovedá žiadnemu "
+                "zariadeniu z Vášho zoznamu."
             )
-            self.del_success = "Zařízení úspěšně odebráno z Vašeho seznamu oblíbených restaurací."
+            self.del_success = "Reštaurácia úspešne odstránená z Vášho zoznamu obľúbených reštaurácií."
             self.lang_set = (
-                "Jazyk úspěšně nastaven. Zadejte **{0}** pro zobrazení nového seznamu příkazů ve Vašem jazyce."
+                "Jazyk bol úspešne nastavený. Zadajte **{0}** pre zobrazenie nového zoznamu príkazov vo Vašom jazyku."
             )
             self.lang_unsupported = (
-                "Nemohu rozpoznat jazyk nebo tento jazyk ještě není podporovaný. "
-                "Zadejte **{0}** pro zobrazení seznamu podporovaných jazyků."
+                "Nemôžem rozpoznať zvolený jazyk alebo jazyk ešte nie je podporovaný. "
+                "Zadajte **{0}** pre zobrazenie zoznamu podporovaných jazykov."
             )
-            self.no_menu = "Omlouvám se, ale tato restaurace dnes nenabízí žádné denní menu."
+            self.no_menu = "Ospravedlňujem sa, ale táto reštaurácia dnes neponúka žiadne denné menu."
 
         elif lang == "tr":
             self.help = (
@@ -340,14 +343,14 @@ class Answers(object):
 class Commands(object):
     def __init__(self, lang):
         if lang == "cs":
-            self.add = "pridat"
+            self.add = "pridej"
             self.all = "vse"
-            self.delete = "odebrat"
+            self.delete = "smaz"
             self.help = "pomoc"
             self.lang = "jazyk"
             self.list = "seznam"
             self.menu = "menu"
-            self.search = "hledat"
+            self.search = "hledej"
 
         elif lang == "en":
             self.add = "add"
@@ -380,14 +383,14 @@ class Commands(object):
             self.search = "wyszukaj"
 
         elif lang == "sk":
-            self.add = "add"
-            self.all = "all"
-            self.delete = "delete"
-            self.help = "help"
-            self.lang = "lang"
-            self.list = "list"
+            self.add = "pridaj"
+            self.all = "vsetko"
+            self.delete = "zmaz"
+            self.help = "pomoc"
+            self.lang = "jazyk"
+            self.list = "zoznam"
             self.menu = "menu"
-            self.search = "search"
+            self.search = "hladaj"
 
         elif lang == "tr":
             self.add = "ekle"

@@ -2,6 +2,10 @@
 
 This file is a manually maintained list of changes for each release.
 
+## v0.1.5 (2018-02-01)
+
+- Fully Slovak language support
+
 ## v0.1.4 (2018-01-31)
 
 - Minor bugfix with sending message to itself
