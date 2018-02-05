@@ -2,6 +2,11 @@
 
 This file is a manually maintained list of changes for each release.
 
+## v0.1.7 (2018-05-01)
+
+- Added support to parse menus from restaurant websites
+- Minor bugfixes with Czech language abbreviation and empty parameters
+
 ## v0.1.6 (2018-02-01)
 
 - Fully Croatian language support

@@ -1,4 +1,5 @@
 web.py
+lxml
 requests
 mysql-connector==2.1.6
 ciscosparkapi

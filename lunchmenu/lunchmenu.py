@@ -8,7 +8,7 @@ import mysql.connector
 
 from lang import Answers, Commands, LangError
 from sql import Database
-from helper import Params, Zomato
+from helper import Params, Zomato, Websites
 from ciscosparkapi import CiscoSparkAPI, Webhook, SparkApiError
 from googletrans import Translator
 
@@ -86,6 +86,7 @@ def init_database():
     print("INFO: Connecting to the internal database.")
     # Connecting to the database and creating tables if they do not exist
     db = object()
+    # TODO Handle the 8 hours timeout by MySQL
     try:
         db = Database(
             os.environ['DB_HOST'],
@@ -111,6 +112,9 @@ def init_params():
     # Initiating Zomato API
     p.zomato = Zomato(os.environ['ZOMATO_KEY'])
 
+    # Initiating extra websites not updated on Zomato
+    p.websites = Websites()
+
     # Initiating Google Translate API
     p.google = Translator()
 
@@ -135,9 +139,11 @@ def insert_room(data):
     ans = Answers('en')
     cmd = Commands('en')
     if room.type == "direct":
-        send_message(data.roomId, ans.welcome_direct.format(data.personEmail, cmd.help))
+        msg = ans.welcome_direct.format(data.personEmail, cmd.search, cmd.add, cmd.list, cmd.menu, cmd.help)
+        send_message(data.roomId, msg)
     else:
-        send_message(data.roomId, ans.welcome_group.format(p.me.emails[0], cmd.help))
+        msg = ans.welcome_group.format(p.me.emails[0], cmd.search, cmd.add, cmd.list, cmd.menu, cmd.help)
+        send_message(data.roomId, msg)
 
 
 def update_room(data):
@@ -194,14 +200,14 @@ def process_message(data):
 
         # Add restaurant command to the list
         if msg['cmd'] == cmd.add:
-            if not add_rest(r, msg['text']):
+            if not msg['text'] or not add_rest(r, msg['text']):
                 send_message(r.room_id, ans.bad_search.format(cmd.search, cmd.add))
             else:
                 send_message(r.room_id, ans.add_success.format(cmd.list))
 
         # Delete restaurant command from the list
         elif msg['cmd'] == cmd.delete:
-            if not delete_rest(r, msg['text']):
+            if not msg['text'] or not delete_rest(r, msg['text']):
                 send_message(r.room_id, ans.bad_param)
             else:
                 send_message(r.room_id, ans.del_success)
@@ -216,14 +222,13 @@ def process_message(data):
                 cmd.lang,
                 cmd.list,
                 cmd.menu,
-                cmd.search,
-                cmd.all
+                cmd.search
             )
             send_message(data.roomId, help)
 
         # Set lunch menu bot language
         elif msg['cmd'] == cmd.lang:
-            if not ans.check_lang(msg['text'][0]):
+            if not msg['text'] or not ans.check_lang(msg['text'][0]):
                 send_message(r.room_id, ans.lang_unsupported.format(cmd.help))
             else:
                 set_lang(r, msg['text'][0])
@@ -235,7 +240,8 @@ def process_message(data):
 
         # Get the menu from the restaurant
         elif msg['cmd'] == cmd.menu:
-            if msg['text'][0] == cmd.all:
+            # Empty parameter, fetch all menus
+            if not msg['text']:
                 if not get_menus(r, ans.no_menu):
                     send_message(r.room_id, ans.bad_param)
             else:
@@ -270,10 +276,10 @@ def parse_message(text):
         msg = {'cmd': "Unknown"}
         return msg
     elif len(tmp) == 1:
-        msg = {'cmd': tmp[0]}
+        msg = {'cmd': tmp[0].lower(), 'text': None}
         return msg
     else:
-        msg = {'cmd': tmp[0], 'text': tmp[1:]}
+        msg = {'cmd': tmp[0].lower(), 'text': tmp[1:]}
 
     return msg
 
@@ -331,6 +337,10 @@ def get_restaurant(r, val):
 
 
 def get_menu(r, rest_id, empty):
+    # Check if the restaurant is in the exception list
+    if rest_id in p.websites.restaurants:
+        return p.websites.get_menu(rest_id)
+
     # Get the menus from the Zomato
     menu = p.zomato.menu(rest_id)
 
@@ -345,7 +355,10 @@ def get_menu(r, rest_id, empty):
         for dish in menu['daily_menus'][0]['daily_menu']['dishes']:
             # Translating dish into desired language using autodetect of Google Translate API
             translation = p.google.translate(dish['dish']['name'], dest=r.room_lang)
-            msg += "- **{0}** - {1}\n".format(translation.text, dish['dish']['price'])
+            if dish['dish']['price']:
+                msg += "- **{0}** - {1}\n".format(translation.text, dish['dish']['price'])
+            else:
+                msg += "- **{0}**\n".format(translation.text, dish['dish']['price'])
         return msg
 
 
@@ -407,6 +420,10 @@ def search_rest(r, val):
 
 
 def set_lang(r, lang):
+    # Czech language exception, Google translate uses 'cs' instead of 'cz'
+    if lang == "cz":
+        lang = "cs"
+
     # Updating language in the database
     data = (lang, r.room_id)
     p.db.update_lang(data)
