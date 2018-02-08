@@ -6,6 +6,9 @@ import sys
 import web
 import mysql.connector
 
+from datetime import datetime, timedelta
+from time import sleep
+from threading import Thread
 from lang import Answers, Commands, LangError
 from sql import Database
 from helper import Params, Zomato, Websites
@@ -118,6 +121,9 @@ def init_params():
     # Initiating Google Translate API
     p.google = Translator()
 
+    # TODO Different timezones, web server time is in UTC, setting to CET
+    p.tz = 1
+
 
 def insert_room(data):
     try:
@@ -139,10 +145,10 @@ def insert_room(data):
     ans = Answers('en')
     cmd = Commands('en')
     if room.type == "direct":
-        msg = ans.welcome_direct.format(data.personEmail, cmd.search, cmd.add, cmd.list, cmd.menu, cmd.help)
+        msg = ans.welcome_direct.format(data.personEmail, cmd.search, cmd.add, cmd.list, cmd.menu, cmd.vote, cmd.help)
         send_message(data.roomId, msg)
     else:
-        msg = ans.welcome_group.format(p.me.emails[0], cmd.search, cmd.add, cmd.list, cmd.menu, cmd.help)
+        msg = ans.welcome_group.format(p.me.emails[0], cmd.search, cmd.add, cmd.list, cmd.menu, cmd.vote, cmd.help)
         send_message(data.roomId, msg)
 
 
@@ -222,7 +228,8 @@ def process_message(data):
                 cmd.lang,
                 cmd.list,
                 cmd.menu,
-                cmd.search
+                cmd.search,
+                cmd.vote
             )
             send_message(data.roomId, help)
 
@@ -256,6 +263,34 @@ def process_message(data):
         elif msg['cmd'] == cmd.search:
             if not search_rest(r, msg['text']):
                 send_message(r.room_id, ans.not_found)
+
+        # Vote for a restaurant
+        elif msg['cmd'] == cmd.vote:
+            if not msg['text'] or get_restaurant(r, msg['text'][0]) == 0:
+                send_message(r.room_id, ans.bad_param)
+            else:
+                # Time is after lunch hours
+                if not check_time():
+                    send_message(r.room_id, ans.vote_late)
+                # Time is before lunch hours
+                else:
+                    # Optional time is provided
+                    if len(msg['text']) > 1:
+                        date = get_time(msg['text'][1])
+                        if not date:
+                            date = set_time()
+                            send_message(r.room_id, ans.no_time)
+                    # Setting default time
+                    else:
+                        date = set_time()
+                        send_message(r.room_id, ans.no_time)
+
+                    # Voting for the restaurant
+                    if not set_vote(r, msg['text'][0], date):
+                        send_message(r.room_id, ans.bad_param)
+                    else:
+                        send_message(r.room_id, ans.vote_success)
+
         else:
             print("WARNING: Unknown command received, sending the bot capabilities.")
             send_message(r.room_id, ans.unknown.format(cmd.help))
@@ -434,6 +469,121 @@ def set_lang(r, lang):
     send_message(r.room_id, ans.lang_set.format(cmd.help))
 
 
+def check_time():
+    return True
+    # Lunch menus are not available during weekends
+    day = datetime.today().weekday()
+    if day > 4:
+        return False
+    # Check if it is not too late for the lunch menu
+    now = datetime.now()
+    # Set the end hour for the lunch menus
+    hour = 15 - p.tz
+    end = now.replace(hour=hour, minute=0, second=0)
+    return end > now
+
+
+def get_time(val):
+    now = datetime.now()
+    tmp = val.split(":")
+    try:
+        # Hours and minutes are provided
+        if len(tmp) > 1:
+            hour = int(tmp[0]) - p.tz
+            minute = int(tmp[1])
+        # Only hours are provided
+        else:
+            hour = int(tmp[0]) - p.tz
+            minute = 0
+        # Creating the date based on the provided time
+        date = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+        # Checking the time frame of provided hour
+        if date < now or hour not in (11 - p.tz, 12 - p.tz, 13 - p.tz, 14 - p.tz):
+            return None
+    except ValueError:
+        return None
+
+    return date
+
+
+def set_time():
+    now = datetime.now()
+    # Set the hour to the next hour if it is after noon
+    if now.hour > 11 - p.tz:
+        hour = now.hour + 1
+    # Set default lunch time at noon
+    else:
+        hour = 12 - p.tz
+
+    return now.replace(hour=hour, minute=0, second=0, microsecond=0)
+
+
+def set_vote(r, val, date):
+    rest_id = get_restaurant(r, val[0])
+
+    # Inserting vote into the database
+    data = (r.room_id, rest_id, date, 0, date)
+    p.db.insert_vote(data)
+
+    return True
+
+
+def send_votes():
+    # TODO Signal handling to kill the thread
+    # Sleeping for a minute before next checking
+    sleep(60)
+
+    # Time is after lunch hours
+    if not check_time():
+        # Delete obsolete votes and be prepared for the next day
+        if p.lunch:
+            p.lunch = False
+            p.db.delete_vote()
+        # Return itself for the next cycle
+        return send_votes()
+    else:
+        p.lunch = True
+
+    # Getting the 15 minutes time frame
+    now = datetime.now()
+    end = now + timedelta(minutes=15)
+
+    # Retrieving the whole table of votes
+    data = (now, end)
+    votes = p.db.select_votes(data)
+
+    # No votes found
+    if not votes:
+        return send_votes()
+
+    # Finding colleagues with the same intent
+    for vote in votes:
+        ans = Answers(vote[4])
+        msg = "## {0}\n\n".format(vote[5])
+        # Get others with the same intention
+        data = (vote[0], vote[1], now)
+        rooms = p.db.select_vote(data)
+        if not rooms:
+            msg += ans.no_votes
+        else:
+            for room in rooms:
+                hour = (room[4] + timedelta(hours=p.tz)).hour
+                minute = (room[4] + timedelta(hours=p.tz)).minute
+                if room[2] == "direct":
+                    u = p.db.select_user([room[0]])
+                    msg += "- <@personEmail:{0}> - {1:d}:{2:02d}\n".format(u.user_email, hour, minute)
+                else:
+                    msg += "- **{0}** - {1:d}:{2:02d}\n".format(room[1], hour, minute)
+        print("INFO: Sending the notification to room {0} about the restaurant {1}.".format(vote[3], vote[5]))
+        send_message(vote[0], msg)
+        # Updating database of votes, that the message was sent
+        data = (vote[0], vote[1])
+        p.db.update_votes(data)
+
+    # Calling itself in the thread
+    send_votes()
+
+
 def send_message(room, msg):
     try:
         p.spark.messages.create(roomId=room, markdown=msg)
@@ -458,7 +608,7 @@ class Lunchmenu(object):
         if webhook.data.personId == p.me.id:
             return
 
-        print("INFO: Spark webhook received - {} {}.".format(webhook.resource, webhook.event))
+        print("INFO: Spark webhook received - {0} {1}.".format(webhook.resource, webhook.event))
 
         # Memberships event
         if webhook.resource == "memberships":
@@ -492,5 +642,8 @@ if __name__ == '__main__':
     init_params()
 
     urls = ('/api/lunchmenu', 'Lunchmenu')
+    thread = Thread(target=send_votes)
+    thread.start()
     app = web.application(urls, globals())
     app.run()
+    thread.join()

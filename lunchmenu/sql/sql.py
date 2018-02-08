@@ -75,6 +75,7 @@ class Database(object):
         self.__commit_sql(self.__tables.create_restaurants(), None)
         self.__commit_sql(self.__tables.create_favourites(), None)
         self.__commit_sql(self.__tables.create_search(), None)
+        self.__commit_sql(self.__tables.create_votes(), None)
 
     def insert_room(self, data):
         self.__commit_sql(self.__insert.insert_room(), data)
@@ -91,11 +92,17 @@ class Database(object):
     def insert_search(self, data):
         self.__commit_sql(self.__insert.insert_search(), data)
 
+    def insert_vote(self, data):
+        self.__commit_sql(self.__insert.insert_vote(), data)
+
     def update_room(self, data):
         self.__commit_sql(self.__update.update_room(), data)
 
     def update_lang(self, data):
         self.__commit_sql(self.__update.update_lang(), data)
+
+    def update_votes(self, data):
+        self.__commit_sql(self.__update.update_vote(), data)
 
     def select_room(self, data):
         result = self.__query_sql(self.__select.select_room(), data)
@@ -125,11 +132,28 @@ class Database(object):
         else:
             return None
 
+    def select_votes(self, data):
+        result = self.__query_sql(self.__select.select_votes(), data)
+        if result:
+            return result
+        else:
+            return None
+
+    def select_vote(self, data):
+        result = self.__query_sql(self.__select.select_vote(), data)
+        if result:
+            return result
+        else:
+            return None
+
     def delete_search(self, data):
         self.__commit_sql(self.__delete.delete_search(), data)
 
     def delete_favourite(self, data):
         self.__commit_sql(self.__delete.delete_favourite(), data)
+
+    def delete_vote(self):
+        self.__commit_sql(self.__delete.delete_vote(), None)
 
     class Tables(object):
         def __init__(self):
@@ -177,6 +201,18 @@ class Database(object):
                 "CONSTRAINT room_s_constr FOREIGN KEY room_s_fk(room_id)"
                 "REFERENCES rooms(room_id) ON DELETE CASCADE ON UPDATE CASCADE)"
             )
+            self.__votes = (
+                "CREATE TABLE IF NOT EXISTS votes("
+                "room_id VARCHAR(128) NOT NULL,"
+                "rest_id INT NOT NULL,"
+                "vote_date DATETIME NOT NULL,"
+                "vote_sent TINYINT NOT NULL,"
+                "PRIMARY KEY(room_id, rest_id),"
+                "CONSTRAINT room_v_constr FOREIGN KEY room_v_fk(room_id)"
+                "REFERENCES rooms(room_id) ON DELETE CASCADE ON UPDATE CASCADE,"
+                "CONSTRAINT rest_v_constr FOREIGN KEY rest_v_fk(rest_id)"
+                "REFERENCES restaurants(rest_id) ON DELETE CASCADE ON UPDATE CASCADE)"
+            )
 
         def create_rooms(self):
             return self.__rooms
@@ -192,6 +228,9 @@ class Database(object):
 
         def create_search(self):
             return self.__search
+
+        def create_votes(self):
+            return self.__votes
 
     class Insert(object):
         def __init__(self):
@@ -212,6 +251,10 @@ class Database(object):
                 "ON DUPLICATE KEY UPDATE room_id = %s"
             )
             self.__search = "INSERT INTO search (room_id, rest_id, rest_num) VALUES (%s, %s, %s)"
+            self.__vote = (
+                "INSERT INTO votes (room_id, rest_id, vote_date, vote_sent) VALUE (%s, %s, %s, %s)"
+                "ON DUPLICATE KEY UPDATE vote_date = %s"
+            )
 
         def insert_room(self):
             return self.__room
@@ -228,10 +271,14 @@ class Database(object):
         def insert_search(self):
             return self.__search
 
+        def insert_vote(self):
+            return self.__vote
+
     class Update(object):
         def __init__(self):
             self.__room = "UPDATE rooms SET room_active = %s WHERE room_id = %s"
             self.__lang = "UPDATE rooms SET room_lang = %s WHERE room_id = %s"
+            self.__vote = "UPDATE votes SET vote_sent = 1 WHERE room_id = %s AND rest_id = %s"
 
         def update_room(self):
             return self.__room
@@ -239,10 +286,14 @@ class Database(object):
         def update_lang(self):
             return self.__lang
 
+        def update_vote(self):
+            return self.__vote
+
     class Delete(object):
         def __init__(self):
             self.__search = "DELETE FROM search WHERE room_id = %s"
             self.__favourite = "DELETE FROM favourites WHERE room_id = %s AND rest_id = %s"
+            self.__vote = "DELETE FROM votes"
 
         def delete_search(self):
             return self.__search
@@ -250,14 +301,27 @@ class Database(object):
         def delete_favourite(self):
             return self.__favourite
 
+        def delete_vote(self):
+            return self.__vote
+
     class Select(object):
         def __init__(self):
             self.__room = "SELECT * FROM rooms WHERE room_id = %s"
-            self.__user = "SELECT * FROM users WHERE user_id = %s"
+            self.__user = "SELECT * FROM users WHERE room_id = %s ORDER BY user_email"
             self.__search = "SELECT rest_id FROM search WHERE room_id = %s AND rest_num = %s"
             self.__restaurant = (
                 "SELECT r.* FROM restaurants r INNER JOIN favourites f ON r.rest_id = f.rest_id "
                 "WHERE f.room_id = %s ORDER BY r.rest_name"
+            )
+            self.__votes = (
+                "SELECT v.room_id, v.rest_id, v.vote_date, ro.room_name, ro.room_lang, re.rest_name "
+                "FROM votes v JOIN rooms ro ON v.room_id = ro.room_id JOIN restaurants re ON v.rest_id = re.rest_id "
+                "WHERE v.vote_sent = 0 AND v.vote_date BETWEEN %s AND %s"
+            )
+            self.__vote = (
+                "SELECT r.room_id, r.room_name, r.room_type, r.room_lang, v.vote_date "
+                "FROM votes v JOIN rooms r ON v.room_id = r.room_id "
+                "WHERE v.room_id != %s AND v.rest_id = %s AND v.vote_date > %s"
             )
 
         def select_room(self):
@@ -271,3 +335,9 @@ class Database(object):
 
         def select_search(self):
             return self.__search
+
+        def select_votes(self):
+            return self.__votes
+
+        def select_vote(self):
+            return self.__vote

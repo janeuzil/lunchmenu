@@ -65,6 +65,16 @@ class Answers(object):
                 "Zadejte **{0}** pro zobrazení seznamu podporovaných jazyků."
             )
             self.no_menu = "Omlouvám se, ale tato restaurace dnes nenabízí žádné denní menu."
+            self.no_time = (
+                "Nebyl specifikovaný žádný, správný či obědový čas, tudíž předpokládám "
+                "Váš dnešní oběd na nejbližší celou hodinu."
+            )
+            self.vote_success = (
+                "Hlas úspěšně zaregistrován, seznam s kolegyněmi a kolegy, kteří projeví stejný zájem Vám bude zaslán "
+                "15 minut před plánovaným obědem."
+            )
+            self.vote_late = "Omlouvám se, ale pro dnešní den je již hlasování ukončeno. Zkuste to prosím zítra."
+            self.no_votes = "Omlouvám se, ale nikdo neprojevil zájem jít dnes do této restaurace."
 
         elif lang == "en":
             self.help = (
@@ -76,7 +86,8 @@ class Answers(object):
                     "- **{4} &lt;language&gt;** - to set the language\n"
                     "- **{5}** - to list your favourite restaurants\n"
                     "- **{6} [number]** - to get the lunch menu of a given restaurant\n"
-                    "- **{7} &lt;name&gt;** - to search for a restaurants\n\n"
+                    "- **{7} &lt;name&gt;** - to search for a restaurants\n"
+                    "- **{8} &lt;number&gt; [time]** - to vote for a restaurant of a day at the given time\n\n"
                     "Glossary:\n"
                     "- **&lt;argument&gt;** - mandatory argument\n"
                     "- **[argument]** - optional argument\n\n"
@@ -84,7 +95,8 @@ class Answers(object):
                     "- **{7} Moe's Tavern** - will display list of restaurants Moe's Tavern and their addresses\n"
                     "- **{1} 2** - will add second restaurant from the previous search in the list\n"
                     "- **{6} 1** - will show the lunch menu for the restaurant first in your list\n"
-                    "- **{6}** - will print all the daily menus of your favourite restaurants\n\n"
+                    "- **{6}** - will print all the daily menus of your favourite restaurants\n"
+                    "- **{8} 1 12:30** - will set the today's vote for the first restaurant in your list at 12:30\n\n"
                     "Supported languages:\n"
                     "- **cz** - Czech\n"
                     "- **hr** - Croatian\n"
@@ -102,7 +114,10 @@ class Answers(object):
                 "restaurant at given address is the one you desired. Type **{2} 2** to add this second result to your "
                 "preferred list of restaurants. To see your list of favourites, type **{3}**. Now simply ask the bot "
                 "what is the menu in all restaurants using **{4}** command.\n\n"
-                "If you need any help, change language or see the list of commands, type **{5}** in this Spark room."
+                "Do you often go for a lunch alone? Just type **{5} 2 12:30** and 15 minutes before the actual lunch "
+                "you will receive a list of colleagues and their intended time to go in the same chosen restaurant. "
+                "Afterwards, you can simply Spark them and join your colleagues for a great collaborative lunch.\n\n"
+                "If you need any help, change language or see the list of commands, type **{6}** in this Spark room."
             )
             self.welcome_group = (
                 "Hello, I am the lunch menu bot.\n\n"
@@ -114,8 +129,11 @@ class Answers(object):
                 "Type **<@personEmail:{0}> {2} 2** to add this second result to your preferred list of restaurants. "
                 "To see your list of favourites, type **<@personEmail:{0}> {3}**. Now simply ask the bot "
                 "what is the menu in all restaurants using **{4}** command.\n\n"
+                "Do you often go for a lunch alone? Just type **{5} 2 12:30** and 15 minutes before the actual lunch "
+                "you will receive a list of colleagues and their intended time to go in the same chosen restaurant. "
+                "Afterwards, you can simply Spark them and join your colleagues for a great collaborative lunch.\n\n"
                 "If you need any help, change language or see the list of commands, "
-                "type **<@personEmail:{0}> {5}** in this Spark room.\n\n"
+                "type **<@personEmail:{0}> {6}** in this Spark room.\n\n"
                 "Keep in mind, that this is a group room. I answer only if I am mentioned using **'@'**."
             )
             self.unknown = "I am sorry, I do not understand. Please type **{0}** to get list of commands."
@@ -141,7 +159,13 @@ class Answers(object):
                 "Type **{0}** to see the list of supported languages."
             )
             self.no_menu = "I am sorry, but this restaurant does not provide a daily menu today."
-            self.missing_arg = "I am sorry, but you "
+            self.no_time = "No time, past time or incorrect one was specified, assuming lunch time at the closest hour."
+            self.vote_success = (
+                "Vote successfully registered, the list of colleagues with the same intent"
+                " will be sent prior to your scheduled time."
+            )
+            self.vote_late = "I am sorry, but it is too late to vote. Try it tomorrow."
+            self.no_votes = "I am sorry, but no one has the intention to go into this restaurant today."
 
         elif lang == "hr":
             self.help = (
@@ -195,7 +219,17 @@ class Answers(object):
                 "Ne mogu utvrditi jezik ili taj jezik nije podržan. "
                 "Utipkaj **{0}** za listu podržanih jezika."
             )
-            self.no_menu = "Orosti, ali ovaj restoran ne nudi dnevni meni za danas."
+            self.no_menu = "Oprosti, ali ovaj restoran ne nudi dnevni meni za danas."
+            self.no_time = (
+                "Vrijeme nije uneseno, uneseno je vrijeme iz prošlosti ili je vrijeme pogrešno upisano. "
+                "Zabilježit ću vrijeme najbližeg sata."
+            )
+            self.vote_success = (
+                "Glas je uspješno registriran, popis kolega sa istom namjerom"
+                " biti će poslan prije zabilježenog vremena."
+            )
+            self.vote_late = "Oprosti, prekasno je za glasanje. Pokušaj sutra."
+            self.no_votes = "Oprosti, ali nitko od kolega nema namjeru ići u taj restoran danas."
 
         elif lang == "pl":
             self.help = (
@@ -251,6 +285,13 @@ class Answers(object):
                 "Wpisz **{0}** aby zpbaczyć listę wspieranych języków."
             )
             self.no_menu = "Wybacz, ta restauracjia nie udostępniła dzisiaj swojego dziennego menu."
+            self.no_time = "Nie podano czasu, lub podano niepoprawny czas zakładając lunch w ciągu następnej godziny."
+            self.vote_success = (
+                "Głos został zarejestrowany, lista pracowników zamierzających udać się do tej samej restauracji "
+                " zostanie przesłana przed zaplanowaną godziną."
+            )
+            self.vote_late = "Wybacz, ale jest już za późno na głosowanie. Spróbuj jutro."
+            self.no_votes = "Wybacz, ale nikt nie wybiera się dziś do tej restauracji."
 
         elif lang == "sk":
             self.help = (
@@ -306,6 +347,15 @@ class Answers(object):
                 "Zadajte **{0}** pre zobrazenie zoznamu podporovaných jazykov."
             )
             self.no_menu = "Ospravedlňujem sa, ale táto reštaurácia dnes neponúka žiadne denné menu."
+            self.no_time = (
+                "Bol zadaný nesprávny, minulý alebo žiadny čas. Predpokladám čas obedu na najbližšiu celú hodinu."
+            )
+            self.vote_success = (
+                "Voľba bola úspešne zaregistrovaná, zoznam kolegov s rovnakým záujomom Vám bude zaslaný "
+                "15 minút pred plánovaným obedom."
+            )
+            self.vote_late = "Ospravedlňujem sa, ale dnešný čas na hlasovanie už vypršal. Skúste to prosím zajtra."
+            self.no_votes = "Ospravedlňujem sa, ale žiadny z kolegov nemal dnes záujem o túto reštauráciu."
 
         elif lang == "tr":
             self.help = (
@@ -355,6 +405,13 @@ class Answers(object):
                 "**{0}** yazarak desteklenen tüm dilleri görüntüleyin."
             )
             self.no_menu = "Üzgünüm, aradığınız restoran bugün öğle menüsü sunmamaktadır."
+            self.no_time = "Geçmiş veya geçersiz bir saat belirttiniz."
+            self.vote_success = (
+                "Oyunuz başarıyla alındı. Sizinle aynı seçimi yapan kişiler "
+                "belirttiğiniz zamandan önce gönderilecektir."
+            )
+            self.vote_late = "Oylama için geç kaldınız, lütfen yarın tekrar deneyin."
+            self.no_votes = "Maalesef bugün sizinle aynı restorana gitmek isteyen kimse yok."
 
         else:
             raise LangError("Unsupported language - {0}.".format(lang))
@@ -376,6 +433,7 @@ class Commands(object):
             self.list = "seznam"
             self.menu = "menu"
             self.search = "hledej"
+            self.vote = "hlasuj"
 
         elif lang == "en":
             self.add = "add"
@@ -385,6 +443,7 @@ class Commands(object):
             self.list = "list"
             self.menu = "menu"
             self.search = "search"
+            self.vote = "vote"
 
         elif lang == "hr":
             self.add = "dodaj"
@@ -394,6 +453,7 @@ class Commands(object):
             self.list = "lista"
             self.menu = "meni"
             self.search = "pretraga"
+            self.vote = "glasaj"
 
         elif lang == "pl":
             self.add = "dodaj"
@@ -403,6 +463,7 @@ class Commands(object):
             self.list = "lista"
             self.menu = "menu"
             self.search = "wyszukaj"
+            self.vote = "glosuj"
 
         elif lang == "sk":
             self.add = "pridaj"
@@ -412,6 +473,7 @@ class Commands(object):
             self.list = "zoznam"
             self.menu = "menu"
             self.search = "hladaj"
+            self.vote = "hlasuj"
 
         elif lang == "tr":
             self.add = "ekle"
@@ -421,6 +483,7 @@ class Commands(object):
             self.list = "liste"
             self.menu = "menu"
             self.search = "ara"
+            self.vote = "oyla"
 
         else:
             raise LangError("Unsupported language - {0}.".format(lang))

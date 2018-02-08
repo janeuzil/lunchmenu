@@ -12,6 +12,8 @@ class Params(object):
         self.google = object()
         self.db = object()
         self.me = object()
+        self.tz = int()
+        self.lunch = bool()
         self.var = [
             "LUNCHMENU_URL",
             "SPARK_ACCESS_TOKEN",

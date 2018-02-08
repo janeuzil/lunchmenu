@@ -2,7 +2,12 @@
 
 This file is a manually maintained list of changes for each release.
 
-## v0.1.7 (2018-05-01)
+## v0.2.0 (2018-02-08)
+
+- Voting support for people who often goes alone for a lunch
+- Creating a new thread which periodically checks the time
+
+## v0.1.7 (2018-02-05)
 
 - Added support to parse menus from restaurant websites
 - Minor bugfixes with Czech language abbreviation and empty parameters
