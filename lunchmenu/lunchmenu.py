@@ -3,12 +3,15 @@ from __future__ import (absolute_import, division, print_function, unicode_liter
 
 import os
 import sys
+import re
 import web
+import signal
 import mysql.connector
+
 
 from datetime import datetime, timedelta
 from time import sleep
-from threading import Thread
+from threading import Thread, Event
 from lang import Answers, Commands, LangError
 from sql import Database
 from helper import Params, Zomato, Websites
@@ -89,7 +92,6 @@ def init_database():
     print("INFO: Connecting to the internal database.")
     # Connecting to the database and creating tables if they do not exist
     db = object()
-    # TODO Handle the 8 hours timeout by MySQL
     try:
         db = Database(
             os.environ['DB_HOST'],
@@ -123,6 +125,9 @@ def init_params():
 
     # TODO Different timezones, web server time is in UTC, setting to CET
     p.tz = 1
+
+    # Setting the default value at start
+    p.lunch = check_time()
 
 
 def insert_room(data):
@@ -182,12 +187,15 @@ def process_message(data):
     if message.personId == p.me.id:
         return
     else:
-        print("INFO: New message from <{0}>: '{1}'.".format(message.personEmail, message.text))
         # Get basic information about the user from the database
         r = p.db.select_room([data.roomId])
+
         if not r:
             print("ERROR: Cannot get the room data.")
             return
+        print("INFO: New message in the room '{0}' by '<{1}>': '{2}'.".format(
+            r.room_name, message.personEmail, message.text)
+        )
         try:
             ans = Answers(r.room_lang)
             cmd = Commands(r.room_lang)
@@ -374,6 +382,7 @@ def get_restaurant(r, val):
 def get_menu(r, rest_id, empty):
     # Check if the restaurant is in the exception list
     if rest_id in p.websites.restaurants:
+        # TODO Get dishes and translate them
         return p.websites.get_menu(rest_id)
 
     # Get the menus from the Zomato
@@ -470,52 +479,47 @@ def set_lang(r, lang):
 
 
 def check_time():
-    return True
     # Lunch menus are not available during weekends
     day = datetime.today().weekday()
     if day > 4:
         return False
+
     # Check if it is not too late for the lunch menu
     now = datetime.now()
-    # Set the end hour for the lunch menus
-    hour = 15 - p.tz
-    end = now.replace(hour=hour, minute=0, second=0)
+    end = now.replace(hour=15, minute=0, second=0) - timedelta(hours=p.tz)
     return end > now
 
 
 def get_time(val):
     now = datetime.now()
-    tmp = val.split(":")
-    try:
-        # Hours and minutes are provided
-        if len(tmp) > 1:
-            hour = int(tmp[0]) - p.tz
-            minute = int(tmp[1])
-        # Only hours are provided
-        else:
-            hour = int(tmp[0]) - p.tz
-            minute = 0
-        # Creating the date based on the provided time
-        date = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-        # Checking the time frame of provided hour
-        if date < now or hour not in (11 - p.tz, 12 - p.tz, 13 - p.tz, 14 - p.tz):
-            return None
-    except ValueError:
-        return None
+    # Regular expression pattern to match hours and minutes during lunch time
+    pattern = "(1[1234])[ .:-]?([0-5][0-9])?"
+    time = re.match(pattern, val.strip())
 
-    return date
+    if not time:
+        return None
+    else:
+        hour = int(time.group(1))
+        minute = 0
+        if time.group(2):
+            minute = int(time.group(2))
+        # Creating the date based on the provided time
+        date = now.replace(hour=hour, minute=minute, second=0, microsecond=0) - timedelta(hours=p.tz)
+        # Checking the time frame of provided hour
+        if date < now:
+            return None
+        return date
 
 
 def set_time():
     now = datetime.now()
-    # Set the hour to the next hour if it is after noon
-    if now.hour > 11 - p.tz:
-        hour = now.hour + 1
+    noon = now.replace(hour=12, minute=0, second=0) - timedelta(hours=p.tz)
+    # Set the hour to the next hour if it is after
+    if now > noon:
+        return now(minute=0, second=0) + timedelta(hours=1)
     # Set default lunch time at noon
     else:
-        hour = 12 - p.tz
-
-    return now.replace(hour=hour, minute=0, second=0, microsecond=0)
+        return noon
 
 
 def set_vote(r, val, date):
@@ -528,68 +532,88 @@ def set_vote(r, val, date):
     return True
 
 
-def send_votes():
-    # TODO Signal handling to kill the thread
-    # Sleeping for a minute before next checking
-    sleep(60)
-
-    # Time is after lunch hours
-    if not check_time():
-        # Delete obsolete votes and be prepared for the next day
-        if p.lunch:
-            p.lunch = False
-            p.db.delete_vote()
-        # Return itself for the next cycle
-        return send_votes()
-    else:
-        p.lunch = True
-
-    # Getting the 15 minutes time frame
-    now = datetime.now()
-    end = now + timedelta(minutes=15)
-
-    # Retrieving the whole table of votes
-    data = (now, end)
-    votes = p.db.select_votes(data)
-
-    # No votes found
-    if not votes:
-        return send_votes()
-
-    # Finding colleagues with the same intent
-    for vote in votes:
-        ans = Answers(vote[4])
-        msg = "## {0}\n\n".format(vote[5])
-        # Get others with the same intention
-        data = (vote[0], vote[1], now)
-        rooms = p.db.select_vote(data)
-        if not rooms:
-            msg += ans.no_votes
-        else:
-            for room in rooms:
-                hour = (room[4] + timedelta(hours=p.tz)).hour
-                minute = (room[4] + timedelta(hours=p.tz)).minute
-                if room[2] == "direct":
-                    u = p.db.select_user([room[0]])
-                    msg += "- <@personEmail:{0}> - {1:d}:{2:02d}\n".format(u.user_email, hour, minute)
-                else:
-                    msg += "- **{0}** - {1:d}:{2:02d}\n".format(room[1], hour, minute)
-        print("INFO: Sending the notification to room {0} about the restaurant {1}.".format(vote[3], vote[5]))
-        send_message(vote[0], msg)
-        # Updating database of votes, that the message was sent
-        data = (vote[0], vote[1])
-        p.db.update_votes(data)
-
-    # Calling itself in the thread
-    send_votes()
-
-
 def send_message(room, msg):
     try:
         p.spark.messages.create(roomId=room, markdown=msg)
     except SparkApiError as err:
         print("WARNING: Cannot send message to the Spark user.")
         print(err)
+
+
+def server_shutdown(signum, frame):
+    raise ServerExit("INFO: Signal {0} has been caught, shutting down server.".format(signum))
+
+
+class Worker(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+        self.shutdown_flag = Event()
+
+    def run(self):
+        while not self.shutdown_flag.is_set():
+            # Sleeping for a minute before next checking
+            sleep(60)
+
+            # Performing database health check each hour to test MySQL connection
+            u = p.db.select_user([os.environ['ADMIN_ROOM']])
+            if not u:
+                print("ERROR: Database connection is broken, cannot retrieve data.")
+
+            # Time is after lunch hours
+            if not check_time():
+                # Delete obsolete votes and be prepared for the next day
+                if p.lunch:
+                    p.lunch = False
+                    print("INFO: Lunch time is over, deleting all votes for today.")
+                    p.db.delete_vote()
+                # Return itself for the next cycle
+                continue
+            else:
+                p.lunch = True
+
+            # Getting the 15 minutes time frame
+            now = datetime.now()
+            end = now + timedelta(minutes=15)
+
+            # Retrieving the whole table of votes
+            data = (now, end)
+            votes = p.db.select_votes(data)
+
+            # No votes found
+            if not votes:
+                continue
+
+            # Finding colleagues with the same intent
+            for vote in votes:
+                ans = Answers(vote[4])
+                msg = "## {0}\n\n".format(vote[5])
+                # Get others with the same intention
+                data = (vote[0], vote[1], now)
+                rooms = p.db.select_vote(data)
+                if not rooms:
+                    msg += ans.no_votes
+                else:
+                    for room in rooms:
+                        hour = (room[4] + timedelta(hours=p.tz)).hour
+                        minute = (room[4] + timedelta(hours=p.tz)).minute
+                        if room[2] == "direct":
+                            u = p.db.select_user([room[0]])
+                            msg += "- <@personEmail:{0}> - {1:d}:{2:02d}\n".format(u.user_email, hour, minute)
+                        else:
+                            msg += "- **{0}** - {1:d}:{2:02d}\n".format(room[1], hour, minute)
+                print("INFO: Sending the notification to room {0} about the restaurant {1}.".format(vote[3], vote[5]))
+                send_message(vote[0], msg)
+                # Updating database of votes, that the message was sent
+                data = (vote[0], vote[1])
+                p.db.update_votes(data)
+
+
+class ServerExit(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return repr(self.msg)
 
 
 class Lunchmenu(object):
@@ -613,6 +637,7 @@ class Lunchmenu(object):
         # Memberships event
         if webhook.resource == "memberships":
             if webhook.event == "created":
+                # TODO Send automatically a welcome message
                 insert_room(webhook.data)
             elif webhook.event == "deleted":
                 update_room(webhook.data)
@@ -633,17 +658,40 @@ class Lunchmenu(object):
             print("WARNING: Unknown webhook event, discarding event.")
 
 
-# Main function starting the web.py web server
-if __name__ == '__main__':
+def main():
+    # TODO Send errors to admin room
+    # Setting default encoding
+
+    # Performing environment and health checks
     check_environment()
     p.spark = CiscoSparkAPI()
     check_webhooks()
     p.db = init_database()
     init_params()
-
     urls = ('/api/lunchmenu', 'Lunchmenu')
-    thread = Thread(target=send_votes)
-    thread.start()
-    app = web.application(urls, globals())
-    app.run()
-    thread.join()
+    app = object()
+    thread = object()
+
+    # Registering the signal handlers
+    signal.signal(signal.SIGTERM, server_shutdown)
+    signal.signal(signal.SIGINT, server_shutdown)
+
+    try:
+        thread = Worker()
+        thread.start()
+        app = web.application(urls, globals())
+        app.run()
+    except ServerExit as msg:
+        # Waiting for the threads
+        print(msg)
+        print("INFO: Waiting for the thread to finish within a minute.")
+        thread.shutdown_flag.set()
+        thread.join()
+        app.stop()
+        print("INFO: Server has been shut down successfully.")
+        sys.exit(0)
+
+
+# Main function starting the web.py web server
+if __name__ == '__main__':
+    main()

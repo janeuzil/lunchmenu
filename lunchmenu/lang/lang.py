@@ -1,4 +1,7 @@
-# coding=utf-8
+# encoding: utf-8
+from __future__ import unicode_literals
+
+
 class Answers(object):
     def __init__(self, lang):
         self.languages = (
@@ -328,15 +331,16 @@ class Answers(object):
                 "názvu a potom **{1} &lt;číslo&gt;** k pridaniu zariadenia na zoznam Vašich obľúbených reštaurácií."
             )
             self.add_success = (
-                "Stravovacie zariadenie bolo úspešne pridané do zoznamu obľúbených reštaurácií. Zadajte **{0}** pre zobrazenie zoznamu "
-                "Vašich obľúbených reštaurácií."
+                "Stravovacie zariadenie bolo úspešne pridané do zoznamu obľúbených reštaurácií. "
+                "Zadajte **{0}** pre zobrazenie zoznamu Vašich obľúbených reštaurácií."
             )
             self.list_empty = (
-                "Neboli nájdené žiadne obľúbené reštaurácie, prosím pridajte do zoznamu aspoň jednu pred použitím tohoto príkazu."
+                "Neboli nájdené žiadne obľúbené reštaurácie, prosím pridajte do zoznamu aspoň jednu "
+                "pred použitím tohoto príkazu."
             )
             self.bad_param = (
-                "Je mi to ľúto, ale nemôžem nájsť požadovanú reštauráciu. Zadané číslo reštaurácie nezodpovedá žiadnemu "
-                "zariadeniu z Vášho zoznamu."
+                "Je mi to ľúto, ale nemôžem nájsť požadovanú reštauráciu. Zadané číslo reštaurácie "
+                "nezodpovedá žiadnemu zariadeniu z Vášho zoznamu."
             )
             self.del_success = "Reštaurácia úspešne odstránená z Vášho zoznamu obľúbených reštaurácií."
             self.lang_set = (
@@ -486,7 +490,7 @@ class Commands(object):
             self.vote = "oyla"
 
         else:
-            raise LangError("Unsupported language - {0}.".format(lang))
+            raise LangError("ERROR: Unsupported language - {0}.".format(lang))
 
 
 class LangError(Exception):

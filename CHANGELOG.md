@@ -2,6 +2,12 @@
 
 This file is a manually maintained list of changes for each release.
 
+## v0.2.1 (2018-02-09)
+
+- Worker thread signal handling
+- Minor bugfixes with time handling and unicode encoding
+- Database connection health checking
+
 ## v0.2.0 (2018-02-08)
 
 - Voting support for people who often goes alone for a lunch
