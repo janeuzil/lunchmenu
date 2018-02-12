@@ -12,6 +12,7 @@ class Params(object):
         self.google = object()
         self.db = object()
         self.me = object()
+        self.admin = str()
         self.tz = int()
         self.lunch = bool()
         self.var = [
@@ -57,7 +58,7 @@ class Websites(object):
         self.restaurants = (16511008, 16510287)
 
     def get_menu(self, rest_id):
-        menu = str()
+        dishes = list()
 
         # Get menu for Passage restaurant from their the websites
         if rest_id == 16510287:
@@ -68,16 +69,16 @@ class Websites(object):
 
             # Price is always behind the actual dish
             pattern = "^[0-9]{2,3}.*"
-            dishes = list()
+            menu = list()
             for i in range(len(tmp)):
                 res = re.match(pattern, tmp[i])
                 if res:
-                    dishes.append(tmp[i-1].strip())
-                    dishes.append(tmp[i])
+                    menu.append(tmp[i-1].strip())
+                    menu.append(tmp[i])
 
-            for i in range(0, len(dishes), 2):
-                menu += "- **" + dishes[i] + "** - " + dishes[i + 1] + "\n"
-            return menu
+            for i in range(0, len(menu), 2):
+                dishes.append({'name': menu[i], 'price': menu[i+1]})
+            return dishes
 
         elif rest_id == 16511008:
             url = "http://www.potrefena-husa.eu"
@@ -85,14 +86,14 @@ class Websites(object):
 
             tree = html.fromstring(r.content)
 
-            dishes = tree.xpath('//h4/text()')
-            side_dishes = tree.xpath('//p/text()')
+            menu = tree.xpath('//h4/text()')
+            sides = tree.xpath('//p/text()')
             prices = tree.xpath('//span[@class="price"]/text()')
 
-            menu = str()
+            for i, j, k in zip(menu, sides, prices):
+                dishes.append({'name': i.strip() + " " + j.strip(), 'price': k.strip()})
+            return dishes
 
-            for i, j, k in zip(dishes, side_dishes, prices):
-                menu += "- **" + i.strip() + " " + j.strip() + "** - " + k.strip() + "\n"
-            return menu
+        # TODO Add more restaurants
 
-        return menu
+        return dishes

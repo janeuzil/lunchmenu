@@ -2,6 +2,12 @@
 
 This file is a manually maintained list of changes for each release.
 
+## v0.2.2 (2018-02-12)
+
+- Sending errors directly to admin room
+- Bugfix with translation of exceptions
+- Bugfix with webhook handling
+
 ## v0.2.1 (2018-02-09)
 
 - Worker thread signal handling

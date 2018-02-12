@@ -146,6 +146,9 @@ class Database(object):
         else:
             return None
 
+    def delete_room(self, data):
+        self.__commit_sql(self.__delete.delete_room(), data)
+
     def delete_search(self, data):
         self.__commit_sql(self.__delete.delete_search(), data)
 
@@ -291,9 +294,13 @@ class Database(object):
 
     class Delete(object):
         def __init__(self):
+            self.__room = "DELETE FROM rooms WHERE room_id = %s"
             self.__search = "DELETE FROM search WHERE room_id = %s"
             self.__favourite = "DELETE FROM favourites WHERE room_id = %s AND rest_id = %s"
             self.__vote = "DELETE FROM votes"
+
+        def delete_room(self):
+            return self.__room
 
         def delete_search(self):
             return self.__search

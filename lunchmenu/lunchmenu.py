@@ -110,8 +110,11 @@ def init_params():
     # Getting information about me
     p.me = p.spark.people.me()
 
+    # Get the admin room ID
+    p.admin = os.environ['ADMIN_ROOM']
+
     # Inserting or updating bot user
-    data = (p.me.id, os.environ['ADMIN_ROOM'], p.me.displayName, p.me.emails[0], os.environ['ADMIN_ROOM'])
+    data = (p.me.id, p.admin, p.me.displayName, p.me.emails[0], p.admin)
     p.db.insert_user(data)
 
     # Initiating Zomato API
@@ -135,8 +138,9 @@ def insert_room(data):
         room = p.spark.rooms.get(data.roomId)
         print("INFO: New membership created, updating database information.")
     except SparkApiError as err:
-        print("ERROR: Cannot retrieve room '{0}' detailed information from Spark.".format(data.roomId))
-        print(err)
+        msg = "ERROR: Cannot retrieve room '{0}' detailed information from Spark.\n".format(data.roomId) + err
+        print(msg)
+        send_message(p.admin, msg)
         return
 
     # Inserting new or updating user
@@ -157,10 +161,15 @@ def insert_room(data):
         send_message(data.roomId, msg)
 
 
-def update_room(data):
-    print("INFO: Membership deleted, updating room database.")
-    room_data = (0, data.roomId)
+def update_room(r):
+    print("INFO: Membership deleted in direct room, updating room database.")
+    room_data = (0, r.room_id)
     p.db.update_room(room_data)
+
+
+def delete_room(r):
+    print("INFO: Membership deleted in group room, deleting from room database.")
+    p.db.delete_room([r.room_id])
 
 
 def insert_user(data, room):
@@ -171,8 +180,9 @@ def insert_user(data, room):
     try:
         person = p.spark.people.get(data.personId)
     except SparkApiError as err:
-        print("ERROR: Cannot retrieve person '{0}' detailed information from Spark.".format(data.personId))
-        print(err)
+        msg = "ERROR: Cannot retrieve person '{0}' detailed information from Spark.\n".format(data.personId) + err
+        print(msg)
+        send_message(p.admin, msg)
         return
 
     print("INFO: Inserting or updating user database.")
@@ -191,7 +201,9 @@ def process_message(data):
         r = p.db.select_room([data.roomId])
 
         if not r:
-            print("ERROR: Cannot get the room data.")
+            msg = "ERROR: Cannot get the room data - '{0}'.".format(data.roomId)
+            print(msg)
+            send_message(p.admin, msg)
             return
         print("INFO: New message in the room '{0}' by '<{1}>': '{2}'.".format(
             r.room_name, message.personEmail, message.text)
@@ -200,8 +212,9 @@ def process_message(data):
             ans = Answers(r.room_lang)
             cmd = Commands(r.room_lang)
         except LangError as err:
-            print("ERROR: Cannot determine language for the given user.")
-            print(err)
+            msg = "ERROR: Cannot determine language for the given user.\n" + err
+            print(msg)
+            send_message(p.admin, msg)
             return
 
         text = message.text
@@ -309,8 +322,9 @@ def message_deleted(data):
         person = p.spark.people.get(data.personId)
         print("INFO: User " + person.displayName + " has deleted its own message.")
     except SparkApiError as err:
-        print("ERROR: Cannot retrieve person '{0}' detailed information from Spark.".format(data.personId))
-        print(err)
+        msg = "ERROR: Cannot retrieve person '{0}' detailed information from Spark.\n".format(data.personId) + err
+        print(msg)
+        send_message(p.admin, msg)
 
 
 def parse_message(text):
@@ -379,11 +393,24 @@ def get_restaurant(r, val):
     return restaurants[i-1][0]
 
 
+def format_menu(dish):
+    if dish['price']:
+        return "- **{0}** - {1}\n".format(dish['name'], dish['price'])
+    else:
+        return "- **{0}**\n".format(dish['name'])
+
+
 def get_menu(r, rest_id, empty):
     # Check if the restaurant is in the exception list
     if rest_id in p.websites.restaurants:
-        # TODO Get dishes and translate them
-        return p.websites.get_menu(rest_id)
+        dishes = p.websites.get_menu(rest_id)
+        msg = str()
+        for dish in dishes:
+            # Translating dish into desired language using autodetect of Google Translate API
+            translation = p.google.translate(dish['name'], dest=r.room_lang)
+            dish['name'] = translation.text
+            msg += format_menu(dish)
+        return msg
 
     # Get the menus from the Zomato
     menu = p.zomato.menu(rest_id)
@@ -399,10 +426,8 @@ def get_menu(r, rest_id, empty):
         for dish in menu['daily_menus'][0]['daily_menu']['dishes']:
             # Translating dish into desired language using autodetect of Google Translate API
             translation = p.google.translate(dish['dish']['name'], dest=r.room_lang)
-            if dish['dish']['price']:
-                msg += "- **{0}** - {1}\n".format(translation.text, dish['dish']['price'])
-            else:
-                msg += "- **{0}**\n".format(translation.text, dish['dish']['price'])
+            dish['dish']['name'] = translation.text
+            msg += format_menu(dish['dish'])
         return msg
 
 
@@ -413,8 +438,7 @@ def get_menus(r, empty):
     if not restaurants:
         return False
 
-    # Due to error with language encoding, the line has to be decoded first
-    empty = "- **" + empty.decode('utf-8') + "**"
+    empty = "- **" + empty + "**"
     menus = str()
     for rest in restaurants:
         menus += "## {0}\n\n".format(rest[1])
@@ -555,9 +579,11 @@ class Worker(Thread):
             sleep(60)
 
             # Performing database health check each hour to test MySQL connection
-            u = p.db.select_user([os.environ['ADMIN_ROOM']])
+            u = p.db.select_user([p.admin])
             if not u:
-                print("ERROR: Database connection is broken, cannot retrieve data.")
+                msg = "ERROR: Database connection is broken, cannot retrieve data."
+                print(msg)
+                send_message(p.admin, msg)
 
             # Time is after lunch hours
             if not check_time():
@@ -629,7 +655,7 @@ class Lunchmenu(object):
             return
 
         # Loop prevention, do not react to events triggered by myself
-        if webhook.data.personId == p.me.id:
+        if webhook.actorId == p.me.id:
             return
 
         print("INFO: Spark webhook received - {0} {1}.".format(webhook.resource, webhook.event))
@@ -637,10 +663,13 @@ class Lunchmenu(object):
         # Memberships event
         if webhook.resource == "memberships":
             if webhook.event == "created":
-                # TODO Send automatically a welcome message
                 insert_room(webhook.data)
             elif webhook.event == "deleted":
-                update_room(webhook.data)
+                r = p.db.select_room([webhook.data.roomId])
+                if r.room_type == "direct":
+                    update_room(r)
+                elif r.room_type == "group":
+                    delete_room(r)
             else:
                 print("WARNING: Unknown memberships webhook event, discarding request.")
 
@@ -651,7 +680,7 @@ class Lunchmenu(object):
             elif webhook.event == "deleted":
                 message_deleted(webhook.data)
             else:
-                print("WARNING: Unknown memberships webhook event, discarding request.")
+                print("WARNING: Unknown messages webhook event, discarding request.")
 
         # Unknown event
         else:
@@ -659,9 +688,6 @@ class Lunchmenu(object):
 
 
 def main():
-    # TODO Send errors to admin room
-    # Setting default encoding
-
     # Performing environment and health checks
     check_environment()
     p.spark = CiscoSparkAPI()
