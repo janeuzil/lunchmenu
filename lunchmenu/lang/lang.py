@@ -49,7 +49,7 @@ class Answers(object):
             )
             self.add_success = (
                 "Zařízení bylo úspešně přidáno na seznam oblíbených zařízení. Zadejte **{0}** pro zobrazení seznamu "
-                "Vašich oblíbencýh restaurací."
+                "Vašich oblíbených restaurací."
             )
             self.list_empty = (
                 "Nebyly nalezeny žádné oblíbené restaurace, prosím přidejte do seznamu alespoň jednu před použítím "

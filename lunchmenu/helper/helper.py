@@ -55,11 +55,31 @@ class Zomato(object):
 
 class Websites(object):
     def __init__(self):
-        self.restaurants = (16511008, 16510287)
+        self.restaurants = (
+            16511008,  # Passage
+            16510287,  # Potrefena Husa
+            18311827,  # Portfolio
+            16505937,  # Fiesta
+            18291268,  # Rebel Wings
+            16506886,  # Hybernia
+            18271176,  # Black Dog
+            16510118,  # Kolkovna
+            16506101  # La Gare
+        )
+        self.week = (
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday"
+        )
 
-    def get_menu(self, rest_id):
+    def get_menu(self, rest_id, day):
+        # Weekend time
+        if day > 4:
+            return None
+
         dishes = list()
-
         # Get menu for Passage restaurant from their the websites
         if rest_id == 16510287:
             url = "https://www.passage.cz"
@@ -94,6 +114,114 @@ class Websites(object):
                 dishes.append({'name': i.strip() + " " + j.strip(), 'price': k.strip()})
             return dishes
 
-        # TODO Add more restaurants
+        elif rest_id == 18311827:
+            url = "http://www.portfolio-restaurant.cz/obedove-menu"
+            r = requests.get(url)
+            tree = html.fromstring(r.content)
+
+            menu = tree.xpath('//td[@class="btm food-name"]/strong/text()')
+            prices = tree.xpath('//td[@class="btm food-price"]/text()')
+
+            for name, price in zip(menu, prices):
+                dishes.append({'name': name, 'price': price})
+            return dishes
+
+        elif rest_id == 16505937:
+            url = "http://www.restaurace-fiesta.cz"
+            r = requests.get(url)
+            tree = html.fromstring(r.content)
+
+            menu = tree.xpath(
+                '//div[@id="{0}-content"]/table[@class="offer"]'
+                '/tbody/tr/td[not(@class="weight")]/text()'.format(self.week[day])
+            )
+
+            for i in range(0, len(menu), 2):
+                dishes.append({'name': menu[i], 'price': menu[i+1]})
+            return dishes
+
+        elif rest_id == 18291268:
+            url = "http://www.rebelwings.cz/"
+            r = requests.get(url)
+            tree = html.fromstring(r.content)
+
+            # Stripping weight at the end
+            pattern = "\([0-9]+g\)$"
+
+            # Week offer
+            path = '//div[@class="section dark"][@id="sectionWeeklyMenu"]//div[@class="foodlist"][2]'
+            menu = tree.xpath(path + '//div[@class="foodname"]/strong/text()')
+            prices = tree.xpath(path + '//div[@class="foodprice"]/text()')
+
+            for name, price in zip(menu, prices):
+                name = re.sub(pattern, '', name.strip())
+                dishes.append({'name': name.strip(), 'price': price})
+
+            # Day offer
+            path = '//div[@class="section dark"][@id="sectionWeeklyMenu"]//div[@class="foodlist"][{0}]'.format(day+3)
+            menu = tree.xpath(path + '//div[@class="foodname"]/strong/text()')
+            prices = tree.xpath(path + '//div[@class="foodprice"]/text()')
+
+            for name, price in zip(menu, prices):
+                name = re.sub(pattern, '', name.strip())
+                dishes.append({'name': name.strip(), 'price': price})
+
+            return dishes
+
+        elif rest_id == 16506886:
+            url = "https://www.hybernia.cz"
+            r = requests.get(url)
+            tree = html.fromstring(r.content)
+
+            menu = tree.xpath('//div[@class="dailyMenu__content"]//span[@class="dailyMenu__meal-name"]/text()')
+            prices = tree.xpath('//div[@class="dailyMenu__content"]//span[@class="dailyMenu__meal-price"]/text()')
+
+            # We do not show the offer of drinks
+            for name, price in zip(menu[:-2], prices[:-2]):
+                dishes.append({'name': name, 'price': price})
+
+            return dishes
+
+        elif rest_id == 18271176:
+            url = "http://www.blackdogs.cz/praha"
+            r = requests.get(url)
+            tree = html.fromstring(r.content)
+
+            menu = tree.xpath(
+                '//div[@class="dailyMenu_item dailyMenu_itemToday"]//span[@class="menu-item-name"]/text()'
+            )
+            prices = tree.xpath(
+                '//div[@class="dailyMenu_item dailyMenu_itemToday"]//span[@class="menu-item-price"]/text()'
+            )
+
+            for name, price in zip(menu, prices):
+                dishes.append({'name': name, 'price': price})
+
+            return dishes
+
+        elif rest_id == 16510118:
+            url = "http://www.kolkovna.cz/cs/kolkovna-celnice-13/denni-menu"
+            r = requests.get(url)
+            tree = html.fromstring(r.content)
+
+            # Stripping the list of allergens at the end
+            pattern = "(,?[0-9]+)+$"
+
+            path = '//div[@class="dailyMenuWeek"]/section[{0}]'.format(day+1)
+            menu = tree.xpath(path + '//td[@class="name"]/text()')
+            prices = tree.xpath(path + '//td[@class="price"]/text()')
+
+            for name, price in zip(menu, prices):
+                name = re.sub(pattern, '', name.strip())
+                dishes.append({'name': name.strip(), 'price': price})
+
+            return dishes
+
+        elif rest_id == 16506101:
+            # Sending URL with image of the menu
+            days = ["pondeli", "utery", "streda", "ctvrtek", "patek"]
+            url = "http://www.brasserielagare.cz/files/POLEDNI%20MENU/{0}.jpg".format(days[day])
+            dishes.append({'name': url, 'price': None})
+            return dishes
 
         return dishes

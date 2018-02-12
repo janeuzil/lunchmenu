@@ -2,6 +2,10 @@
 
 This file is a manually maintained list of changes for each release.
 
+## v0.2.3 (2018-02-12)
+
+- Parsing restaurant website exceptions
+
 ## v0.2.2 (2018-02-12)
 
 - Sending errors directly to admin room

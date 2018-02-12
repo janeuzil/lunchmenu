@@ -395,15 +395,16 @@ def get_restaurant(r, val):
 
 def format_menu(dish):
     if dish['price']:
-        return "- **{0}** - {1}\n".format(dish['name'], dish['price'])
+        return "- **{0}** - {1}\n".format(dish['name'].strip().strip('*'), dish['price'])
     else:
-        return "- **{0}**\n".format(dish['name'])
+        return "- **{0}**\n".format(dish['name'].strip().strip('*'))
 
 
 def get_menu(r, rest_id, empty):
     # Check if the restaurant is in the exception list
     if rest_id in p.websites.restaurants:
-        dishes = p.websites.get_menu(rest_id)
+        day = datetime.today().weekday()
+        dishes = p.websites.get_menu(rest_id, day)
         msg = str()
         for dish in dishes:
             # Translating dish into desired language using autodetect of Google Translate API
