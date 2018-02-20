@@ -2,6 +2,12 @@
 
 This file is a manually maintained list of changes for each release.
 
+## v0.2.4 (2018-02-20)
+
+- Fully Russian language support thanks to [Ali Kasimov](mailto:akasimov@cisco.com)
+- More restaurant exceptions
+- Minor bugfixes
+
 ## v0.2.3 (2018-02-12)
 
 - Parsing restaurant website exceptions

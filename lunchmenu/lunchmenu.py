@@ -43,7 +43,8 @@ def check_environment():
     var = str()
     try:
         for var in p.var:
-            os.environ[var]
+            if var in os.environ:
+                pass
     except KeyError as err:
         system_error(err, "Please set the environment variable " + var + ".")
 
@@ -138,7 +139,7 @@ def insert_room(data):
         room = p.spark.rooms.get(data.roomId)
         print("INFO: New membership created, updating database information.")
     except SparkApiError as err:
-        msg = "ERROR: Cannot retrieve room '{0}' detailed information from Spark.\n".format(data.roomId) + err
+        msg = "ERROR: Cannot retrieve room '{0}' detailed information from Spark.\n".format(data.roomId) + str(err)
         print(msg)
         send_message(p.admin, msg)
         return
@@ -180,7 +181,7 @@ def insert_user(data, room):
     try:
         person = p.spark.people.get(data.personId)
     except SparkApiError as err:
-        msg = "ERROR: Cannot retrieve person '{0}' detailed information from Spark.\n".format(data.personId) + err
+        msg = "ERROR: Cannot retrieve person '{0}' detailed information from Spark.\n".format(data.personId) + str(err)
         print(msg)
         send_message(p.admin, msg)
         return
@@ -212,7 +213,7 @@ def process_message(data):
             ans = Answers(r.room_lang)
             cmd = Commands(r.room_lang)
         except LangError as err:
-            msg = "ERROR: Cannot determine language for the given user.\n" + err
+            msg = "ERROR: Cannot determine language for the given user.\n" + str(err)
             print(msg)
             send_message(p.admin, msg)
             return
@@ -322,7 +323,7 @@ def message_deleted(data):
         person = p.spark.people.get(data.personId)
         print("INFO: User " + person.displayName + " has deleted its own message.")
     except SparkApiError as err:
-        msg = "ERROR: Cannot retrieve person '{0}' detailed information from Spark.\n".format(data.personId) + err
+        msg = "ERROR: Cannot retrieve person '{0}' detailed information from Spark.\n".format(data.personId) + str(err)
         print(msg)
         send_message(p.admin, msg)
 
@@ -446,6 +447,11 @@ def get_menus(r, empty):
         menus += get_menu(r, rest[0], empty)
         menus += "\n\n"
 
+        # Spark does not support messages longer than 10000 characters with encryption
+        if len(menus) > 5000:
+            send_message(r.room_id, menus)
+            menus = str()
+
     send_message(r.room_id, menus)
     return True
 
@@ -541,7 +547,7 @@ def set_time():
     noon = now.replace(hour=12, minute=0, second=0) - timedelta(hours=p.tz)
     # Set the hour to the next hour if it is after
     if now > noon:
-        return now(minute=0, second=0) + timedelta(hours=1)
+        return now.replace(minute=0, second=0) + timedelta(hours=1)
     # Set default lunch time at noon
     else:
         return noon
@@ -644,7 +650,9 @@ class ServerExit(Exception):
 
 
 class Lunchmenu(object):
-    def POST(self):
+
+    @staticmethod
+    def POST():
         print("INFO: New HTTP POST request received.")
 
         # Creating webhook object

@@ -59,12 +59,14 @@ class Websites(object):
             16511008,  # Passage
             16510287,  # Potrefena Husa
             18311827,  # Portfolio
-            16505937,  # Fiesta
+            16510105,  # Fiesta
             18291268,  # Rebel Wings
             16506886,  # Hybernia
             18271176,  # Black Dog
             16510118,  # Kolkovna
-            16506101  # La Gare
+            16517493,  # Hooters
+            16506101,  # La Gare
+            16506344  # Pizza Coloseum
         )
         self.week = (
             "monday",
@@ -73,6 +75,13 @@ class Websites(object):
             "thursday",
             "friday"
         )
+
+    @staticmethod
+    def strip_menu(menu):
+        menu = map(unicode, menu)
+        menu = map(unicode.strip, menu)
+        menu = filter(None, menu)
+        return menu
 
     def get_menu(self, rest_id, day):
         # Weekend time
@@ -126,7 +135,7 @@ class Websites(object):
                 dishes.append({'name': name, 'price': price})
             return dishes
 
-        elif rest_id == 16505937:
+        elif rest_id == 16510105:
             url = "http://www.restaurace-fiesta.cz"
             r = requests.get(url)
             tree = html.fromstring(r.content)
@@ -146,7 +155,7 @@ class Websites(object):
             tree = html.fromstring(r.content)
 
             # Stripping weight at the end
-            pattern = "\([0-9]+g\)$"
+            pattern = "\([0-9]+g.*\)$"
 
             # Week offer
             path = '//div[@class="section dark"][@id="sectionWeeklyMenu"]//div[@class="foodlist"][2]'
@@ -155,7 +164,7 @@ class Websites(object):
 
             for name, price in zip(menu, prices):
                 name = re.sub(pattern, '', name.strip())
-                dishes.append({'name': name.strip(), 'price': price})
+                dishes.append({'name': name.strip(), 'price': price.strip()})
 
             # Day offer
             path = '//div[@class="section dark"][@id="sectionWeeklyMenu"]//div[@class="foodlist"][{0}]'.format(day+3)
@@ -164,7 +173,7 @@ class Websites(object):
 
             for name, price in zip(menu, prices):
                 name = re.sub(pattern, '', name.strip())
-                dishes.append({'name': name.strip(), 'price': price})
+                dishes.append({'name': name.strip(), 'price': price.strip()})
 
             return dishes
 
@@ -194,6 +203,9 @@ class Websites(object):
                 '//div[@class="dailyMenu_item dailyMenu_itemToday"]//span[@class="menu-item-price"]/text()'
             )
 
+            # Stripping and filtering the answer
+            menu = self.strip_menu(menu)
+
             for name, price in zip(menu, prices):
                 dishes.append({'name': name, 'price': price})
 
@@ -217,10 +229,49 @@ class Websites(object):
 
             return dishes
 
+        elif rest_id == 16517493:
+            url = "http://hooters.cz/cz/vodickova/Menu/1"
+            r = requests.get(url)
+            tree = html.fromstring(r.content)
+
+            day = 1
+            path = '//div[@class="menuListBlock"][{0}]/table[@class="menuList"]'
+
+            # The daily menu
+            menu = tree.xpath(path.format(day + 1) + '//td/text()')
+            sides = tree.xpath(path.format(day + 1) + '//td/span/text()')
+
+            # Stripping and filtering the answer
+            menu = self.strip_menu(menu)
+
+            # Creating dishes
+            for i in range(0, len(menu), 2):
+                dishes.append({'name': menu[i], 'price': menu[i + 1]})
+
+            # Appending sidedishes
+            for i in range(len(sides)):
+                dishes[i + 1]['name'] = dishes[i + 1]['name'] + " " + sides[i]
+
+            # Dessert of the week
+            menu = tree.xpath(path.format(1) + '//td/text()')
+            sides = tree.xpath(path.format(1) + '//td/span/text()')
+
+            # Stripping and filtering the answer
+            menu = self.strip_menu(menu)
+
+            dishes.append({'name': menu[0], 'price': menu[1]})
+            dishes[-1]['name'] = dishes[-1]['name'] + " " + sides[0]
+            return dishes
+
         elif rest_id == 16506101:
             # Sending URL with image of the menu
             days = ["pondeli", "utery", "streda", "ctvrtek", "patek"]
             url = "http://www.brasserielagare.cz/files/POLEDNI%20MENU/{0}.jpg".format(days[day])
+            dishes.append({'name': url, 'price': None})
+            return dishes
+
+        elif rest_id == 16506344:
+            url = "https://pizzacoloseum.cz/na-porici/denni-menu"
             dishes.append({'name': url, 'price': None})
             return dishes
 
