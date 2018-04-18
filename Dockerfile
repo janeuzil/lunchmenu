@@ -9,6 +9,7 @@ RUN apk add -U ca-certificates --update --no-cache g++ gcc libxslt-dev \
           wheel
 
 COPY requirements.txt /app/
+COPY gcp_sak.json /app/
 
 RUN pip install -r /app/requirements.txt
 

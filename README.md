@@ -5,6 +5,10 @@
 - leverages the [Zomato](https://developers.zomato.com/documentation) API
 - leverages the [Google Translate](https://cloud.google.com/translate/docs/) API
 
+**Note:** Using the Google Translate API is not free of charge, you need to create an account which gives you free trial. 
+To be able to use the application you need to create a service account key and saves is as **gcp_sak.json** file 
+in the project root directory. Tutorial how to generate service account key can be found [here.](https://cloud.google.com/translate/docs/reference/libraries)
+
 
 ## Installation
 Open the terminal on your machine (e.g. Ubuntu) and install required packages:
@@ -54,6 +58,7 @@ sudo docker run -d -ti \
 -e LUNCHMENU_URL="https://janeuzil.cz/api/lunchmenu" \
 -e SPARK_ACCESS_TOKEN="*************************" \
 -e ADMIN_ROOM="********************" \
+-e GOOGLE_APPLICATION_CREDENTIALS="/app/gcp_sak.json" \
 -e DB_HOST="127.0.0.1" \
 -e DB_NAME="lunchmenu" \
 -e DB_USER="lunchmenu" \

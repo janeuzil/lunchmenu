@@ -165,7 +165,7 @@ class Database(object):
                 "room_id VARCHAR(128) NOT NULL,"
                 "room_membership VARCHAR(256) NOT NULL,"
                 "room_active TINYINT NOT NULL,"
-                "room_name VARCHAR(128) NOT NULL,"
+                "room_name VARCHAR(128) COLLATE utf8_unicode_ci NOT NULL,"
                 "room_type VARCHAR(16) NOT NULL,"
                 "room_lang VARCHAR(4) DEFAULT 'en' NOT NULL,"
                 "PRIMARY KEY(room_id))"

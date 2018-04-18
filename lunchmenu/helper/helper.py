@@ -219,7 +219,7 @@ class Websites(object):
             # Stripping the list of allergens at the end
             pattern = "(,?[0-9]+)+$"
 
-            path = '//div[@class="dailyMenuWeek"]/section[{0}]'.format(day+1)
+            path = '//div[@class="dailyMenuWeek"][1]/section[{0}]'.format(day+1)
             menu = tree.xpath(path + '//td[@class="name"]/text()')
             prices = tree.xpath(path + '//td[@class="price"]/text()')
 

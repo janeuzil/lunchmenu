@@ -16,7 +16,7 @@ from lang import Answers, Commands, LangError
 from sql import Database
 from helper import Params, Zomato, Websites
 from ciscosparkapi import CiscoSparkAPI, Webhook, SparkApiError
-from googletrans import Translator
+from google.cloud import translate
 
 __author__ = "Jan Neuzil"
 __author_email__ = "janeuzil@cisco.com"
@@ -125,7 +125,7 @@ def init_params():
     p.websites = Websites()
 
     # Initiating Google Translate API
-    p.google = Translator()
+    p.google = translate.Client()
 
     # TODO Different timezones, web server time is in UTC, setting to CET
     p.tz = 1
@@ -198,7 +198,7 @@ def process_message(data):
     if message.personId == p.me.id:
         return
     else:
-        # Get basic information about the user from the database
+        # Get basic information about the room from the database
         r = p.db.select_room([data.roomId])
 
         if not r:
@@ -396,9 +396,9 @@ def get_restaurant(r, val):
 
 def format_menu(dish):
     if dish['price']:
-        return "- **{0}** - {1}\n".format(dish['name'].strip().strip('*'), dish['price'])
+        return "- **{0}** - {1}\n".format(dish['name'].strip(" *"), dish['price'])
     else:
-        return "- **{0}**\n".format(dish['name'].strip().strip('*'))
+        return "- **{0}**\n".format(dish['name'].strip(" *"))
 
 
 def get_menu(r, rest_id, empty):
@@ -409,8 +409,8 @@ def get_menu(r, rest_id, empty):
         msg = str()
         for dish in dishes:
             # Translating dish into desired language using autodetect of Google Translate API
-            translation = p.google.translate(dish['name'], dest=r.room_lang)
-            dish['name'] = translation.text
+            translation = p.google.translate(dish['name'], target_language=r.room_lang)
+            dish['name'] = translation['translatedText']
             msg += format_menu(dish)
         return msg
 
@@ -479,6 +479,11 @@ def search_rest(r, val):
 
     # Search for restaurant by given name
     res = p.zomato.search(val)
+
+    # Unknown error occurred during the Zomato API call
+    if not res:
+        return False
+
     i = 1
     msg = str()
     for rest in res['restaurants']:
@@ -564,6 +569,11 @@ def set_vote(r, val, date):
 
 
 def send_message(room, msg):
+    if not msg:
+        msg = "ERROR: Cannot send empty message to the Spark user."
+        print(msg)
+        send_message(p.admin, msg)
+        return
     try:
         p.spark.messages.create(roomId=room, markdown=msg)
     except SparkApiError as err:
@@ -675,6 +685,11 @@ class Lunchmenu(object):
                 insert_room(webhook.data)
             elif webhook.event == "deleted":
                 r = p.db.select_room([webhook.data.roomId])
+                if not r:
+                    msg = "ERROR: Cannot get the room data - '{0}'.".format(webhook.data.roomId)
+                    print(msg)
+                    send_message(p.admin, msg)
+                    return
                 if r.room_type == "direct":
                     update_room(r)
                 elif r.room_type == "group":
@@ -702,7 +717,10 @@ def main():
     p.spark = CiscoSparkAPI()
     check_webhooks()
     p.db = init_database()
-    init_params()
+    try:
+        init_params()
+    except Exception as e:
+        system_error(e, "Cannot initialize default parameters.")
     urls = ('/api/lunchmenu', 'Lunchmenu')
     app = object()
     thread = object()

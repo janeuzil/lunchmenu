@@ -2,6 +2,12 @@
 
 This file is a manually maintained list of changes for each release.
 
+## v0.3.0 (2018-04-18)
+
+- Official Google Translate API calls using GCP
+- Minor bugfixes
+
+
 ## v0.2.4 (2018-02-20)
 
 - Fully Russian language support thanks to [Ali Kasimov](mailto:akasimov@cisco.com)
