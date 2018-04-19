@@ -402,6 +402,11 @@ def format_menu(dish):
 
 
 def get_menu(r, rest_id, empty):
+    # Check if the daily menu for the given language is already in the cache
+    menu = p.db.select_menu([rest_id, r.room_lang])
+    if menu:
+        return menu[0][0]
+
     # Check if the restaurant is in the exception list
     if rest_id in p.websites.restaurants:
         day = datetime.today().weekday()
@@ -412,6 +417,10 @@ def get_menu(r, rest_id, empty):
             translation = p.google.translate(dish['name'], target_language=r.room_lang)
             dish['name'] = translation['translatedText']
             msg += format_menu(dish)
+
+        # Store the menu in the cache using database
+        data = (rest_id, r.room_lang, msg, msg)
+        p.db.insert_menu(data)
         return msg
 
     # Get the menus from the Zomato
@@ -427,9 +436,12 @@ def get_menu(r, rest_id, empty):
         msg = str()
         for dish in menu['daily_menus'][0]['daily_menu']['dishes']:
             # Translating dish into desired language using autodetect of Google Translate API
-            translation = p.google.translate(dish['dish']['name'], dest=r.room_lang)
-            dish['dish']['name'] = translation.text
+            translation = p.google.translate(dish['dish']['name'], target_language=r.room_lang)
+            dish['dish']['name'] = translation['translatedText']
             msg += format_menu(dish['dish'])
+        # Store the menu in the cache using database
+        data = (rest_id, r.room_lang, msg, msg)
+        p.db.insert_menu(data)
         return msg
 
 
@@ -526,6 +538,17 @@ def check_time():
     return end > now
 
 
+def flush_cache():
+    # Check if it is not too late for the lunch menu
+    now = datetime.now()
+    end = now.replace(hour=0, minute=0, second=0) - timedelta(hours=p.tz)
+
+    # Flushing the cache of daily menus
+    if now > end:
+        print("INFO: It is the new day, deleting stored daily menu dishes from cache memory.")
+        p.db.delete_menu()
+
+
 def get_time(val):
     now = datetime.now()
     # Regular expression pattern to match hours and minutes during lunch time
@@ -601,6 +624,9 @@ class Worker(Thread):
                 msg = "ERROR: Database connection is broken, cannot retrieve data."
                 print(msg)
                 send_message(p.admin, msg)
+
+            # Flush menu cache if it is the new day
+            flush_cache()
 
             # Time is after lunch hours
             if not check_time():

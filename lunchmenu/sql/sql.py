@@ -76,6 +76,7 @@ class Database(object):
         self.__commit_sql(self.__tables.create_favourites(), None)
         self.__commit_sql(self.__tables.create_search(), None)
         self.__commit_sql(self.__tables.create_votes(), None)
+        self.__commit_sql(self.__tables.create_menus(), None)
 
     def insert_room(self, data):
         self.__commit_sql(self.__insert.insert_room(), data)
@@ -94,6 +95,9 @@ class Database(object):
 
     def insert_vote(self, data):
         self.__commit_sql(self.__insert.insert_vote(), data)
+
+    def insert_menu(self, data):
+        self.__commit_sql(self.__insert.insert_menu(), data)
 
     def update_room(self, data):
         self.__commit_sql(self.__update.update_room(), data)
@@ -146,6 +150,13 @@ class Database(object):
         else:
             return None
 
+    def select_menu(self, data):
+        result = self.__query_sql(self.__select.select_menu(), data)
+        if result:
+            return result
+        else:
+            return None
+
     def delete_room(self, data):
         self.__commit_sql(self.__delete.delete_room(), data)
 
@@ -157,6 +168,9 @@ class Database(object):
 
     def delete_vote(self):
         self.__commit_sql(self.__delete.delete_vote(), None)
+
+    def delete_menu(self):
+        self.__commit_sql(self.__delete.delete_menu(), None)
 
     class Tables(object):
         def __init__(self):
@@ -216,6 +230,15 @@ class Database(object):
                 "CONSTRAINT rest_v_constr FOREIGN KEY rest_v_fk(rest_id)"
                 "REFERENCES restaurants(rest_id) ON DELETE CASCADE ON UPDATE CASCADE)"
             )
+            self.__menus = (
+                "CREATE TABLE IF NOT EXISTS menus("
+                "rest_id INT NOT NULL,"
+                "room_lang VARCHAR(4) NOT NULL,"
+                "menu_dishes VARCHAR(8192) COLLATE utf8_unicode_ci NOT NULL,"
+                "PRIMARY KEY(rest_id, room_lang),"
+                "CONSTRAINT rest_m_constr FOREIGN KEY rest_m_fk(rest_id)"
+                "REFERENCES restaurants(rest_id) ON DELETE CASCADE ON UPDATE CASCADE)"
+            )
 
         def create_rooms(self):
             return self.__rooms
@@ -234,6 +257,9 @@ class Database(object):
 
         def create_votes(self):
             return self.__votes
+
+        def create_menus(self):
+            return self.__menus
 
     class Insert(object):
         def __init__(self):
@@ -258,6 +284,10 @@ class Database(object):
                 "INSERT INTO votes (room_id, rest_id, vote_date, vote_sent) VALUE (%s, %s, %s, %s)"
                 "ON DUPLICATE KEY UPDATE vote_date = %s"
             )
+            self.__menu = (
+                "INSERT INTO menus (rest_id, room_lang, menu_dishes) VALUE (%s, %s, %s)"
+                "ON DUPLICATE KEY UPDATE menu_dishes = %s"
+            )
 
         def insert_room(self):
             return self.__room
@@ -276,6 +306,9 @@ class Database(object):
 
         def insert_vote(self):
             return self.__vote
+
+        def insert_menu(self):
+            return self.__menu
 
     class Update(object):
         def __init__(self):
@@ -298,6 +331,7 @@ class Database(object):
             self.__search = "DELETE FROM search WHERE room_id = %s"
             self.__favourite = "DELETE FROM favourites WHERE room_id = %s AND rest_id = %s"
             self.__vote = "DELETE FROM votes"
+            self.__menu = "DELETE FROM menus"
 
         def delete_room(self):
             return self.__room
@@ -310,6 +344,9 @@ class Database(object):
 
         def delete_vote(self):
             return self.__vote
+
+        def delete_menu(self):
+            return self.__menu
 
     class Select(object):
         def __init__(self):
@@ -330,6 +367,7 @@ class Database(object):
                 "FROM votes v JOIN rooms r ON v.room_id = r.room_id "
                 "WHERE v.room_id != %s AND v.rest_id = %s AND v.vote_date > %s"
             )
+            self.__menu = "SELECT menu_dishes FROM menus WHERE rest_id = %s AND room_lang = %s"
 
         def select_room(self):
             return self.__room
@@ -348,3 +386,6 @@ class Database(object):
 
         def select_vote(self):
             return self.__vote
+
+        def select_menu(self):
+            return self.__menu

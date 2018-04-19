@@ -2,11 +2,15 @@
 
 This file is a manually maintained list of changes for each release.
 
+## v0.3.1 (2018-04-19)
+
+- Cache mechanism to store already translated menus in order to save the API calls to GCP
+- Minor bugfixes
+
 ## v0.3.0 (2018-04-18)
 
 - Official Google Translate API calls using GCP
 - Minor bugfixes
-
 
 ## v0.2.4 (2018-02-20)
 
