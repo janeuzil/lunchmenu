@@ -128,7 +128,7 @@ def init_params():
     p.google = translate.Client()
 
     # TODO Different timezones, web server time is in UTC, setting to CET
-    p.tz = 1
+    p.tz = 2
 
     # Setting the default value at start
     p.lunch = check_time()
@@ -145,7 +145,7 @@ def insert_room(data):
         return
 
     # Inserting new or updating user
-    insert_user(data, room)
+    user_name = insert_user(data, room)
 
     # Inserting new room in the database
     room_data = (room.id, data.id, room.title, room.type)
@@ -155,7 +155,7 @@ def insert_room(data):
     ans = Answers('en')
     cmd = Commands('en')
     if room.type == "direct":
-        msg = ans.welcome_direct.format(data.personEmail, cmd.search, cmd.add, cmd.list, cmd.menu, cmd.vote, cmd.help)
+        msg = ans.welcome_direct.format(user_name, cmd.search, cmd.add, cmd.list, cmd.menu, cmd.vote, cmd.help)
         send_message(data.roomId, msg)
     else:
         msg = ans.welcome_group.format(p.me.emails[0], cmd.search, cmd.add, cmd.list, cmd.menu, cmd.vote, cmd.help)
@@ -173,22 +173,30 @@ def delete_room(r):
     p.db.delete_room([r.room_id])
 
 
+def get_user(user_id):
+    try:
+        person = p.spark.people.get(user_id)
+        return person
+    except SparkApiError as err:
+        msg = "ERROR: Cannot retrieve person '{0}' detailed information from Spark.\n".format(user_id) + str(err)
+        print(msg)
+        send_message(p.admin, msg)
+        return None
+
+
 def insert_user(data, room):
     # Group conversations is not bind to a specific user, but the bot itself
     if room.type == "group":
-        return
+        return str()
 
-    try:
-        person = p.spark.people.get(data.personId)
-    except SparkApiError as err:
-        msg = "ERROR: Cannot retrieve person '{0}' detailed information from Spark.\n".format(data.personId) + str(err)
-        print(msg)
-        send_message(p.admin, msg)
-        return
-
-    print("INFO: Inserting or updating user database.")
-    user_data = (person.id, room.id, person.displayName, person.emails[0], room.id)
-    p.db.insert_user(user_data)
+    person = get_user(data.personId)
+    if person:
+        print("INFO: Inserting or updating user database.")
+        user_data = (person.id, room.id, person.displayName, person.emails[0], room.id)
+        p.db.insert_user(user_data)
+        return person.displayName
+    else:
+        return str()
 
 
 def process_message(data):
@@ -242,11 +250,17 @@ def process_message(data):
 
         # Sends help message
         elif msg['cmd'] == cmd.help:
+            u = get_user(message.personId)
+            if not u:
+                name = str()
+            else:
+                name = u.displayName
             help = ans.help.format(
-                data.personEmail,
+                name,
                 cmd.add,
                 cmd.delete,
                 cmd.help,
+                cmd.city,
                 cmd.lang,
                 cmd.list,
                 cmd.menu,
@@ -254,6 +268,11 @@ def process_message(data):
                 cmd.vote
             )
             send_message(data.roomId, help)
+
+        # Set the city for searching
+        elif msg['cmd'] == cmd.city:
+            if not msg['text'] or not set_city(r, msg['text']):
+                send_message(r.room_id, ans.city_unknown)
 
         # Set lunch menu bot language
         elif msg['cmd'] == cmd.lang:
@@ -490,7 +509,7 @@ def search_rest(r, val):
     p.db.delete_search([r.room_id])
 
     # Search for restaurant by given name
-    res = p.zomato.search(val)
+    res = p.zomato.search(val, r.room_city)
 
     # Unknown error occurred during the Zomato API call
     if not res:
@@ -509,6 +528,23 @@ def search_rest(r, val):
         return True
     else:
         return False
+
+
+def set_city(r, val):
+    res = p.zomato.cities(val)
+
+    # City not found
+    if not res or not res['location_suggestions']:
+        return False
+
+    # Update city with the first result found
+    city = res['location_suggestions'][0]
+    data = (city['id'], r.room_id)
+    p.db.update_city(data)
+
+    ans = Answers(r.room_lang)
+    send_message(r.room_id, ans.city_set.format("{0} ({1})".format(city['name'], city['country_name'])))
+    return True
 
 
 def set_lang(r, lang):
@@ -540,11 +576,11 @@ def check_time():
 
 def flush_cache():
     # Check if it is not too late for the lunch menu
-    now = datetime.now()
-    end = now.replace(hour=0, minute=0, second=0) - timedelta(hours=p.tz)
+    now = datetime.now() + timedelta(hours=p.tz)
+    time = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
 
     # Flushing the cache of daily menus
-    if now > end:
+    if 0 <= time <= 60:
         print("INFO: It is the new day, deleting stored daily menu dishes from cache memory.")
         p.db.delete_menu()
 
@@ -747,7 +783,7 @@ def main():
         init_params()
     except Exception as e:
         system_error(e, "Cannot initialize default parameters.")
-    urls = ('/api/lunchmenu', 'Lunchmenu')
+    urls = ("/api/lunchmenu", "Lunchmenu")
     app = object()
     thread = object()
 

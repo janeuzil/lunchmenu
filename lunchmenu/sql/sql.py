@@ -2,12 +2,13 @@ import mysql.connector
 
 
 class Room(object):
-    def __init__(self, room_id, room_membership, room_active, room_name, room_type, room_lang):
+    def __init__(self, room_id, room_membership, room_active, room_name, room_type, room_city, room_lang):
         self.room_id = room_id
         self.room_membership = room_membership
         self.room_active = room_active
         self.room_name = room_name
         self.room_type = room_type
+        self.room_city = room_city
         self.room_lang = room_lang
 
 
@@ -102,6 +103,9 @@ class Database(object):
     def update_room(self, data):
         self.__commit_sql(self.__update.update_room(), data)
 
+    def update_city(self, data):
+        self.__commit_sql(self.__update.update_city(), data)
+
     def update_lang(self, data):
         self.__commit_sql(self.__update.update_lang(), data)
 
@@ -111,7 +115,10 @@ class Database(object):
     def select_room(self, data):
         result = self.__query_sql(self.__select.select_room(), data)
         if result:
-            return Room(result[0][0], result[0][1], result[0][2], result[0][3], result[0][4], result[0][5])
+            return Room(
+                result[0][0], result[0][1], result[0][2], result[0][3],
+                result[0][4], result[0][5], result[0][6]
+            )
         else:
             return None
 
@@ -181,6 +188,7 @@ class Database(object):
                 "room_active TINYINT NOT NULL,"
                 "room_name VARCHAR(128) COLLATE utf8_unicode_ci NOT NULL,"
                 "room_type VARCHAR(16) NOT NULL,"
+                "room_city INT DEFAULT 84 NOT NULL,"
                 "room_lang VARCHAR(4) DEFAULT 'en' NOT NULL,"
                 "PRIMARY KEY(room_id))"
             )
@@ -313,11 +321,15 @@ class Database(object):
     class Update(object):
         def __init__(self):
             self.__room = "UPDATE rooms SET room_active = %s WHERE room_id = %s"
+            self.__city = "UPDATE rooms SET room_city = %s WHERE room_id = %s"
             self.__lang = "UPDATE rooms SET room_lang = %s WHERE room_id = %s"
             self.__vote = "UPDATE votes SET vote_sent = 1 WHERE room_id = %s AND rest_id = %s"
 
         def update_room(self):
             return self.__room
+
+        def update_city(self):
+            return self.__city
 
         def update_lang(self):
             return self.__lang

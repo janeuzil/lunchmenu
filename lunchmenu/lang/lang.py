@@ -16,24 +16,25 @@ class Answers(object):
 
         if lang == "cs":
             self.help = (
-                "Dobrý den <@personEmail:{0}>, chcete vědět, co mají dnes dobrého k obědu?\n\n"
+                "Dobrý den **{0}**, chcete vědět, co mají dnes dobrého k obědu?\n\n"
                 "Seznam příkazů:\n\n"
                 "- **{1}  &lt;číslo&gt;** - přidá zařízení na Váš seznam oblíbených restaurací\n" +
                 "- **{2} &lt;číslo&gt;** - odebere zařízení z Vašeho seznamu oblíbených restaurací\n"
                 "- **{3}** - zobrazí tuto nápovědu\n"
-                "- **{4} &lt;jazyk&gt;** - nastaví jazyk\n"
-                "- **{5}** - zobrazí seznam Vašich oblíbených restaurací\n"
-                "- **{6} [číslo]** - zobrazí denní menu zvolené restaurace\n"
-                "- **{7} &lt;název&gt;** - vyhledá seznam restaurací na základě uvedeného názvu\n"
-                "- **{8} &lt;číslo&gt; [čas]** - vyjádří Váš zájem jít dnes do dané restaurace v uvedený čas\n\n"
+                "- **{4}** - nastaví město či oblast pro hledání, výchozí je Praha\n"
+                "- **{5} &lt;jazyk&gt;** - nastaví jazyk\n"
+                "- **{6}** - zobrazí seznam Vašich oblíbených restaurací\n"
+                "- **{7} [číslo]** - zobrazí denní menu zvolené restaurace\n"
+                "- **{8} &lt;název&gt;** - vyhledá seznam restaurací na základě uvedeného názvu\n"
+                "- **{9} &lt;číslo&gt; [čas]** - vyjádří Váš zájem jít dnes do dané restaurace v uvedený čas\n\n"
                 "Vysvětlivky:\n"
                 "- **&lt;argument&gt;** - povinný argument\n"
                 "- **[argument]** - volitelný argument\n\n"
                 "Příklady:\n"
-                "- **{7} U Očka** - zobrazí seznam restaurací s názvem U Očka a jejich adresy\n"
+                "- **{8} U Očka** - zobrazí seznam restaurací s názvem U Očka a jejich adresy\n"
                 "- **{1} 2** - přidá druhou restauraci z předchozího hledání na Váš seznam\n"
-                "- **{6} 1** - zobrazí denní menu restaurace na druhé pozici ve Vašem seznamu\n"
-                "- **{6}** - zobrazí všechna denní menu restaurací z Vašeho seznamu\n"
+                "- **{7} 1** - zobrazí denní menu restaurace na druhé pozici ve Vašem seznamu\n"
+                "- **{7}** - zobrazí všechna denní menu restaurací z Vašeho seznamu\n"
                 "Podporované jazyky:\n"
                 "- **cz** - čeština\n"
                 "- **hr** - chorvatština\n"
@@ -63,6 +64,11 @@ class Answers(object):
                 "zařízení z Vašeho seznamu."
             )
             self.del_success = "Zařízení úspěšně odebráno z Vašeho seznamu oblíbených restaurací."
+            self.city_set = "Oblast pro hledání restaurací byla úspěšně nastavena na město {0}."
+            self.city_unknown = (
+                "Omlouvám se, ale dotazované město nemohu naleznout. "
+                "Zkuste zadat prosím nejbližší velké město v oblasti či jeho anglický název."
+            )
             self.lang_set = (
                 "Jazyk úspěšně nastaven. Zadejte **{0}** pro zobrazení nového seznamu příkazů ve Vašem jazyce."
             )
@@ -84,24 +90,25 @@ class Answers(object):
 
         elif lang == "en":
             self.help = (
-                    "Hello <@personEmail:{0}>, would you like to know the lunch menu?\n\n"
+                    "Hello **{0}**, would you like to know the lunch menu?\n\n"
                     "List of commands:\n\n"
                     "- **{1}  &lt;number&gt;** - to add a favourite restaurant to the personal list\n" +
                     "- **{2} &lt;number&gt;** - to delete a favourite restaurant from the personal list\n"
                     "- **{3}** - to show this help\n"
-                    "- **{4} &lt;language&gt;** - to set the language\n"
-                    "- **{5}** - to list your favourite restaurants\n"
-                    "- **{6} [number]** - to get the lunch menu of a given restaurant\n"
-                    "- **{7} &lt;name&gt;** - to search for a restaurants\n"
-                    "- **{8} &lt;number&gt; [time]** - to vote for a restaurant of a day at the given time\n\n"
+                    "- **{4}** - to set the city for searching, default is Prague\n"
+                    "- **{5} &lt;language&gt;** - to set the language\n"
+                    "- **{6}** - to list your favourite restaurants\n"
+                    "- **{7} [number]** - to get the lunch menu of a given restaurant\n"
+                    "- **{8} &lt;name&gt;** - to search for a restaurants\n"
+                    "- **{9} &lt;number&gt; [time]** - to vote for a restaurant of a day at the given time\n\n"
                     "Glossary:\n"
                     "- **&lt;argument&gt;** - mandatory argument\n"
                     "- **[argument]** - optional argument\n\n"
                     "Examples:\n"
-                    "- **{7} Moe's Tavern** - will display list of restaurants Moe's Tavern and their addresses\n"
+                    "- **{8} Moe's Tavern** - will display list of restaurants Moe's Tavern and their addresses\n"
                     "- **{1} 2** - will add second restaurant from the previous search in the list\n"
-                    "- **{6} 1** - will show the lunch menu for the restaurant first in your list\n"
-                    "- **{6}** - will print all the daily menus of your favourite restaurants\n\n"
+                    "- **{7} 1** - will show the lunch menu for the restaurant first in your list\n"
+                    "- **{7}** - will print all the daily menus of your favourite restaurants\n\n"
                     "Supported languages:\n"
                     "- **cz** - Czech\n"
                     "- **hr** - Croatian\n"
@@ -112,7 +119,7 @@ class Answers(object):
                     "- **tr** - Turkish\n"
             )
             self.welcome_direct = (
-                "Hello <@personEmail:{0}>, I am the lunch menu bot.\n\n"
+                "Hello **{0}**, I am the lunch menu bot.\n\n"
                 "I help to find the daily lunch menu in your favourite restaurants. How do I work?\n\n"
                 "Let's say that you often go to restaurant **Good Food** for the lunch. You type **{1} Good Food** "
                 "to search for it, because there might be another one with the same name. After you will get "
@@ -159,6 +166,10 @@ class Answers(object):
                 "or no matching restaurant in your list of favourites."
             )
             self.del_success = "Restaurant successfully deleted from the list of your favourite restaurants."
+            self.city_set = "Area for searching the restaurants successfully set for city of {0}."
+            self.city_unknown = (
+                "I am sorry, but specified city could not be found. Please try the bigger city in your area."
+            )
             self.lang_set = "Language successfully set. Type **{0}** to see new list of commands in your language."
             self.lang_unsupported = (
                 "Cannot determine the language or this language is not supported yet. "
@@ -175,24 +186,25 @@ class Answers(object):
 
         elif lang == "hr":
             self.help = (
-                    "Bok <@personEmail:{0}>, želiš li znati dnevni meni?\n\n"
+                    "Bok **{0}**, želiš li znati dnevni meni?\n\n"
                     "Lista naredbi:\n\n"
                     "- **{1}  &lt;broj&gt;** - za dodavanje omiljenog restorana u personaliziranu listu\n" +
                     "- **{2} &lt;broj&gt;** - za brisanje restorana iz personalizirane liste\n"
                     "- **{3}** - za prikaz pomoći\n"
-                    "- **{4} &lt;jezik&gt;** - za postavljanje jezika\n"
-                    "- **{5}** - za ispis tvojih omiljenih restorana\n"
-                    "- **{6} [broj]** - za prikaz dnevnog menija\n"
-                    "- **{7} &lt;ime&gt;** - za pretragu restorana\n"
-                    "- **{8} &lt;broj&gt; [sat]** - za glasanje za restoran dana za zadano vrijeme\n\n"
+                    "- **{4}** - za postavljanje grada za pretragu, zadano je Prag\n"
+                    "- **{5} &lt;jezik&gt;** - za postavljanje jezika\n"
+                    "- **{6}** - za ispis tvojih omiljenih restorana\n"
+                    "- **{7} [broj]** - za prikaz dnevnog menija\n"
+                    "- **{8} &lt;ime&gt;** - za pretragu restorana\n"
+                    "- **{9} &lt;broj&gt; [sat]** - za glasanje za restoran dana za zadano vrijeme\n\n"
                     "Glosar:\n"
                     "- **&lt;argument&gt;** - obavezni argument\n"
                     "- **[argument]** - neobavezni argument\n\n"
                     "Primjeri:\n"
-                    "- **{7} Mrzla Piva** - će ispisati sve restorane s imenom Mrzla Piva i njihove adrese\n"
+                    "- **{8} Mrzla Piva** - će ispisati sve restorane s imenom Mrzla Piva i njihove adrese\n"
                     "- **{1} 2** - će dodati restoran pod rednim brojem 2 iz prethodne pretrage\n"
-                    "- **{6} 1** - će prikazati dnevni meni za prvi restoran u tvojoj listi\n"
-                    "- **{6}** - će ispisati sve dnevne menije tvojih omiljenih restorana\n\n"
+                    "- **{7} 1** - će prikazati dnevni meni za prvi restoran u tvojoj listi\n"
+                    "- **{7}** - će ispisati sve dnevne menije tvojih omiljenih restorana\n\n"
                     "Podržani jezici:\n"
                     "- **cz** - Češki\n"
                     "- **hr** - Hrvatski\n"
@@ -222,6 +234,10 @@ class Answers(object):
                 "ili ne postoji podudarajući restoran u tvojoj listi."
             )
             self.del_success = "Restoran uspješno izbrisan iz liste tvojih omiljenih restorana."
+            self.city_set = "Kao područje za pretragu restorana postavljen je grad {0}."
+            self.city_unknown = (
+                "Oprosti, ali upisani grad nije pronađen. Molim te unesi veći grad u tvojem području."
+            )
             self.lang_set = "Jezik uspješno promijenjen. Utipkaj **{0}** za prikaz liste naredbi na tvom jeziku."
             self.lang_unsupported = (
                 "Ne mogu utvrditi jezik ili taj jezik nije podržan. "
@@ -241,24 +257,25 @@ class Answers(object):
 
         elif lang == "pl":
             self.help = (
-                    "Witaj <@personEmail:{0}>, czy chciałbyś poznać menu lunchowe?\n\n"
+                    "Witaj **{0}**, czy chciałbyś poznać menu lunchowe?\n\n"
                     "Lista poleceń:\n\n"
                     "- **{1}  &lt;numer&gt;** - dodanie ulubionej restauracji do osobistej listy\n" +
                     "- **{2} &lt;numer&gt;** - usuwanie ulubionej restauracji z osobistej listy\n"
                     "- **{3}** - wyświetlenie tej pomocy\n"
-                    "- **{4} &lt;język&gt;** - zmiana języka\n"
-                    "- **{5}** - wyświetlenie listy Twoich ulubionych restauracji\n"
-                    "- **{6} [numer]** - wyświetlenie menu lunchowego\n"
-                    "- **{7} &lt;imię&gt;** - wyszukanie restauracji\n"
-                    "- **{8} &lt;numer&gt; [godzina]** - aby zagłosować na restaurację na dziś o podanej godzinie\n\n"
+                    "- **{4}** - aby ustawić miasto do przeszukania, domyślna jest Praga\n"
+                    "- **{5} &lt;język&gt;** - zmiana języka\n"
+                    "- **{6}** - wyświetlenie listy Twoich ulubionych restauracji\n"
+                    "- **{7} [numer]** - wyświetlenie menu lunchowego\n"
+                    "- **{8} &lt;imię&gt;** - wyszukanie restauracji\n"
+                    "- **{9} &lt;numer&gt; [godzina]** - aby zagłosować na restaurację na dziś o podanej godzinie\n\n"
                     "Słownik:\n"
                     "- **&lt;argument&gt;** - wymagany argument\n"
                     "- **[argument]** - fakultatywny argument\n\n"
                     "Przykłady:\n"
-                    "- **{7} Moe's Tavern** - wyświetlenie listy restauracji Moe's Tavern i ich adresów\n"
+                    "- **{8} Moe's Tavern** - wyświetlenie listy restauracji Moe's Tavern i ich adresów\n"
                     "- **{1} 2** - dodanie drugiej restauracji z wyników wyszukiwania do listy ulubionych restauracji\n"
-                    "- **{6} 1** - wyświetlenie menu lunchowego pierwszej restauracji z listy ulubionych restauracji\n"
-                    "- **{6}** - wyświetlenie menu lunchowych wszystkich restauracji z listy\n\n"
+                    "- **{7} 1** - wyświetlenie menu lunchowego pierwszej restauracji z listy ulubionych restauracji\n"
+                    "- **{7}** - wyświetlenie menu lunchowych wszystkich restauracji z listy\n\n"
                     "Obsługiwane języki:\n"
                     "- **cz** - czeski\n"
                     "- **hr** - chorwacki\n"
@@ -289,6 +306,10 @@ class Answers(object):
                 "lub pasującej restauracji w liście ulubionych restauracji."
             )
             self.del_success = "Restauracja pomyślnie usunięta z listy ulub ionych restauracji."
+            self.city_set = "Obszar wyszukiwania restauracji pomyślnie ustawiono na miasto {0}."
+            self.city_unknown = (
+                "Wybacz, lecz podane miasto nie mogło zostać znalezione. Wybierz większe miasto w swojej okolicy."
+            )
             self.lang_set = "Język pomyślnie wybrany. Wpisz **{0}** by zobaczyć nową listę komend w Twoim języku."
             self.lang_unsupported = (
                 "Nie można określić języka, lub wybrany język nie jest wspierany."
@@ -305,22 +326,24 @@ class Answers(object):
 
         elif lang == "ru":
             self.help = (
-                "Здравствуйте <@personEmail:{0}>, хотели бы Вы знать, что у нас сегодня в меню?\n\n"
+                "Здравствуйте **{0}**, хотели бы Вы знать, что у нас сегодня в меню?\n\n"
                 "Список команд:\n\n"
                 "- **{1} &lt;цифра&gt;** - чтобы  добавить ресторан в Список избранных ресторанов\n" +
                 "- **{2} &lt;цифра&gt;** - чтобы удалить избранный ресторан из Моего Списка\n"
                 "- **{3}** - чтобы показать подсказки\n"
-                "- **{4} &lt;язык&gt;** - чтобы настроить язык\n"
-                "- **{5}** - чтобы показать список избранных ресторанов\n"
-                "- **{6} &lt;цифра&gt;** - чтобы получить меню\n"
-                "- **{7} &lt;имя&gt;** - чтобы найти ресторан\n\n"
+                "- **{4}** - \n"
+                "- **{5} &lt;язык&gt;** - чтобы настроить язык\n"
+                "- **{6}** - чтобы показать список избранных ресторанов\n"
+                "- **{7} [имя}** -  \n"
+                "- **{8} &lt;цифра&gt;** - чтобы получить меню\n"
+                "- **{9} &lt;имя&gt;** - чтобы найти ресторан\n\n"
                 "Примечания:\n"
                 "- **&lt;аргумент&gt;** - обязательный аргумент\n\n"
                 "Примеры:\n"
-                "- **{7} Кафе Пушкинъ** - покажет список ресторанов Moe's Tavern и их местоположение\n"
+                "- **{8} Кафе Пушкинъ** - покажет список ресторанов Moe's Tavern и их местоположение\n"
                 "- **{1} 2** - добавит второй ресторан из предыдущего поиска\n"
-                "- **{6} 1** - покажет меню ресторана, который находится первым в вашем списке\n"
-                "- **{6} {8}** - распечатает меню ваших избранных ресторанов \n\n"
+                "- **{7} 1** - покажет меню ресторана, который находится первым в вашем списке\n"
+                "- **{7}** - распечатает меню ваших избранных ресторанов \n\n"
                 "Поддерживаемые языки:\n"
                 "- **cs** - Чешский\n"
                 "- **hr** - Хорватский\n"
@@ -351,6 +374,10 @@ class Answers(object):
                 "или не был найден соответствующий ресторан списку избранных ресторанов."
             )
             self.del_success = "Ресторан был успешно удален из списка избранных ресторанов."
+            self.city_set = "Area for searching the restaurants successfully set for city of {0}."
+            self.city_unknown = (
+                "I am sorry, but specified city could not be found. Please try the bigger city in your area."
+            )
             self.lang_set = (
                 "Язык был успешно настроен. Введите **{0}** чтобы отобразить новый список команд на Вашем языке."
             )
@@ -372,24 +399,25 @@ class Answers(object):
 
         elif lang == "sk":
             self.help = (
-                    "Dobrý deň <@personEmail:{0}>, chcete vediet, čo majú dnes dobré na obed?\n\n"
+                    "Dobrý deň **{0}**, chcete vediet, čo majú dnes dobré na obed?\n\n"
                     "Zoznam príkazov:\n\n"
                     "- **{1}  &lt;číslo&gt;** - pridá zariadenie na Váš zoznam obľúbených reštaurácií\n" +
                     "- **{2} &lt;číslo&gt;** - odoberie zariadenie z Vášho zoznamu obľúbených reštaurácií\n"
                     "- **{3}** - zobrazí túto nápovedu\n"
-                    "- **{4} &lt;jazyk&gt;** - nastaví jazyk\n"
-                    "- **{5}** - zobrazí zoznam Vaších obľúbených reštaurácií\n"
-                    "- **{6} [číslo]** - zobrazí denné menu zvolenej reštaurácie\n"
-                    "- **{7} &lt;názov&gt;** - vyhľadá zoznam reštaurácií na základe uvedeného názvu\n"
-                    "- **{8} &lt;číslo&gt; [čas]** - hlasovanie pre reštauráciu dňa pre zvolený čas\n\n"                    
+                    "- **{4}** - nastaví mesto pre hladanie, predvolená je Praha\n"
+                    "- **{5} &lt;jazyk&gt;** - nastaví jazyk\n"
+                    "- **{6}** - zobrazí zoznam Vaších obľúbených reštaurácií\n"
+                    "- **{7} [číslo]** - zobrazí denné menu zvolenej reštaurácie\n"
+                    "- **{8} &lt;názov&gt;** - vyhľadá zoznam reštaurácií na základe uvedeného názvu\n"
+                    "- **{9} &lt;číslo&gt; [čas]** - hlasovanie pre reštauráciu dňa pre zvolený čas\n\n"                    
                     "Vysvetlivky:\n"
                     "- **&lt;argument&gt;** - povinný argument\n"
                     "- **[argument]** - voliteľný argument\n"
                     "Príklady:\n"
-                    "- **{7} U Očka** - zobrazí zoznam reštaurácií s názvom U Očka a ich adresy\n"
+                    "- **{8} U Očka** - zobrazí zoznam reštaurácií s názvom U Očka a ich adresy\n"
                     "- **{1} 2** - pridá druhú reštauráciu z predchádzajúceho hľadania na Váš zoznam\n"
-                    "- **{6} 1** - zobrazí denné menu reštaurácie na druhej pozícií vo Vašom zozname\n"
-                    "- **{6}** - zobrazí všetky denné menu reštaurácií z Vášho zoznamu\n\n"
+                    "- **{7} 1** - zobrazí denné menu reštaurácie na druhej pozícií vo Vašom zozname\n"
+                    "- **{7}** - zobrazí všetky denné menu reštaurácií z Vášho zoznamu\n\n"
                     "Podporované jazyky:\n"
                     "- **cz** - čeština\n"
                     "- **hr** - chorvátčina\n"
@@ -419,6 +447,10 @@ class Answers(object):
                 "nezodpovedá žiadnemu zariadeniu z Vášho zoznamu."
             )
             self.del_success = "Reštaurácia úspešne odstránená z Vášho zoznamu obľúbených reštaurácií."
+            self.city_set = "Oblast pre hladanie reštauracií bola úspešne nastavená na mesto {0}."
+            self.city_unknown = (
+                "Je mi to ľúto, ale nemôžem nájsť požadované mesto. Skúste zadat najbližšie veľké mesto v oblasti."
+            )
             self.lang_set = (
                 "Jazyk bol úspešne nastavený. Zadajte **{0}** pre zobrazenie nového zoznamu príkazov vo Vašom jazyku."
             )
@@ -439,7 +471,7 @@ class Answers(object):
 
         elif lang == "tr":
             self.help = (
-                    "Merhaba <@personEmail:{0}>, oğlen menüsünü öğrenmek ister misiniz?\n\n"
+                    "Merhaba **{0}**, oğlen menüsünü öğrenmek ister misiniz?\n\n"
                     "Komut listesi:\n\n"
                     "- **{1}  &lt;sayı&gt;** - Beğendiğiniz restoranları kişisel listenize ekleyin\n" +
                     "- **{2} &lt;sayı&gt;** - Restoranları kişisel listenizden silin\n"
@@ -511,6 +543,7 @@ class Commands(object):
             self.add = "pridej"
             self.delete = "smaz"
             self.help = "pomoc"
+            self.city = "oblast"
             self.lang = "jazyk"
             self.list = "seznam"
             self.menu = "menu"
@@ -521,6 +554,7 @@ class Commands(object):
             self.add = "add"
             self.delete = "delete"
             self.help = "help"
+            self.city = "city"
             self.lang = "lang"
             self.list = "list"
             self.menu = "menu"
@@ -531,6 +565,7 @@ class Commands(object):
             self.add = "dodaj"
             self.delete = "izbrisi"
             self.help = "pomoc"
+            self.city = "grad"
             self.lang = "jezik"
             self.list = "lista"
             self.menu = "meni"
@@ -541,6 +576,7 @@ class Commands(object):
             self.add = "dodaj"
             self.delete = "usun"
             self.help = "pomoc"
+            self.city = "miasto"
             self.lang = "jezyk"
             self.list = "lista"
             self.menu = "menu"
@@ -551,6 +587,7 @@ class Commands(object):
             self.add = "Добавить"
             self.delete = "Удалить"
             self.help = "помощь"
+            self.city = "город"
             self.lang = "язык"
             self.list = "список"
             self.menu = "меню"
@@ -561,6 +598,7 @@ class Commands(object):
             self.add = "pridaj"
             self.delete = "zmaz"
             self.help = "pomoc"
+            self.city = "mesto"
             self.lang = "jazyk"
             self.list = "zoznam"
             self.menu = "menu"
@@ -571,6 +609,7 @@ class Commands(object):
             self.add = "ekle"
             self.delete = "sil"
             self.help = "yardim"
+            self.city = "kent"
             self.lang = "dil"
             self.list = "liste"
             self.menu = "menu"

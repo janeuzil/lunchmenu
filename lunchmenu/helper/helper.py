@@ -31,13 +31,20 @@ class Zomato(object):
     def __init__(self, key):
         self.key = key
         self.url_search = "https://developers.zomato.com/api/v2.1/search"
+        self.url_cities = "https://developers.zomato.com/api/v2.1/cities"
         self.url_rest = "https://developers.zomato.com/api/v2.1/restaurant"
         self.url_menu = "https://developers.zomato.com/api/v2.1/dailymenu"
 
-    def search(self, rest):
+    def search(self, rest, city):
         headers = {'Accept': 'application/json', 'user-key': self.key}
-        params = {'q': rest, 'entity_id': 84, 'entity_type': 'city', 'count': 5}
+        params = {'q': rest, 'entity_id': city, 'entity_type': 'city', 'count': 5}
         data = json.loads(requests.get(self.url_search, params=params, headers=headers).text)
+        return data
+
+    def cities(self, city):
+        headers = {'Accept': 'application/json', 'user-key': self.key}
+        params = {'q': city}
+        data = json.loads(requests.get(self.url_cities, params=params, headers=headers).text)
         return data
 
     def restaurant(self, rest_id):
@@ -234,7 +241,6 @@ class Websites(object):
             r = requests.get(url)
             tree = html.fromstring(r.content)
 
-            day = 1
             path = '//div[@class="menuListBlock"][{0}]/table[@class="menuList"]'
 
             # The daily menu
@@ -248,19 +254,10 @@ class Websites(object):
             for i in range(0, len(menu), 2):
                 dishes.append({'name': menu[i], 'price': menu[i + 1]})
 
-            # Appending sidedishes
+            # Appending side dishes
             for i in range(len(sides)):
                 dishes[i + 1]['name'] = dishes[i + 1]['name'] + " " + sides[i]
 
-            # Dessert of the week
-            menu = tree.xpath(path.format(1) + '//td/text()')
-            sides = tree.xpath(path.format(1) + '//td/span/text()')
-
-            # Stripping and filtering the answer
-            menu = self.strip_menu(menu)
-
-            dishes.append({'name': menu[0], 'price': menu[1]})
-            dishes[-1]['name'] = dishes[-1]['name'] + " " + sides[0]
             return dishes
 
         elif rest_id == 16506101:

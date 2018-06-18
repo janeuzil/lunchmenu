@@ -2,6 +2,11 @@
 
 This file is a manually maintained list of changes for each release.
 
+## v0.4.0 (2018-06-18)
+
+- Adjustable search areas, not just Prague city
+- Minor bugfixes
+
 ## v0.3.1 (2018-04-19)
 
 - Cache mechanism to store already translated menus in order to save the API calls to GCP
