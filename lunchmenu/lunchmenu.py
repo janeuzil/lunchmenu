@@ -54,13 +54,13 @@ def init_spark():
     try:
         api = CiscoSparkAPI()
     except SparkApiError as err:
-        system_error(err, "Unable to initialize Cisco Spark API.")
+        system_error(err, "Unable to initialize Cisco Webex Teams API.")
     return api
 
 
 def check_webhooks():
     # Creating webhooks if not existing
-    print("INFO: Checking lunch menu webhooks with Spark.")
+    print("INFO: Checking lunch menu webhooks with Webex Teams.")
     required_webhooks = [
         "messages created",
         "messages deleted",
@@ -68,7 +68,7 @@ def check_webhooks():
         "memberships deleted"
     ]
     try:
-        webhooks = p.spark.webhooks.list()
+        webhooks = p.webex.webhooks.list()
         existing_webhooks = list()
         for hook in webhooks:
             existing_webhooks.append(hook.resource + " " + hook.event)
@@ -78,7 +78,7 @@ def check_webhooks():
 
         # Creating missing webhooks
         for hook in missing_webhooks:
-            p.spark.webhooks.create(
+            p.webex.webhooks.create(
                 name=hook,
                 targetUrl=os.environ['LUNCHMENU_URL'],
                 resource=hook.split()[0],
@@ -86,7 +86,7 @@ def check_webhooks():
             )
             print("INFO: Webhook '" + hook + "' successfully created.")
     except SparkApiError as err:
-        system_error(err, "Cannot verify lunch menu webhooks with Spark.")
+        system_error(err, "Cannot verify lunch menu webhooks with Webex Teams.")
 
 
 def init_database():
@@ -107,9 +107,46 @@ def init_database():
     return db
 
 
+def check_database():
+    print("INFO: Checking if all the rooms are in the database.")
+
+    try:
+        # Getting all rooms from Webex Teams
+        rooms_wt = p.webex.rooms.list(max=1000)
+
+    except SparkApiError as err:
+        system_error(err, "Cannot retrieve list of rooms from the Webex Teams.")
+
+    try:
+        # Selecting all rooms from the database
+        rooms_db = p.db.select_rooms()
+
+    except mysql.connector.Error as err:
+        system_error(err, "Cannot get data from the database.")
+
+    # Get only the list of room ID from the database
+    rooms_id = [r[0] for r in rooms_db]
+
+    for room in rooms_wt:
+        if room.id not in rooms_id:
+            print("WARNING: Correcting missing database entry for the room id {0}".format(room.id))
+            if room.type == "direct":
+                person = room.creatorId
+            else:
+                person = p.me.id
+
+            # Get memberships details
+            try:
+                membership = p.webex.memberships.list(roomId=room.id, personId=person)
+                for data in membership:
+                    insert_room(data)
+            except SparkApiError as err:
+                system_error(err, "Cannot retrieve list of rooms from the Webex Teams.")
+
+
 def init_params():
     # Getting information about me
-    p.me = p.spark.people.me()
+    p.me = p.webex.people.me()
 
     # Get the admin room ID
     p.admin = os.environ['ADMIN_ROOM']
@@ -127,8 +164,7 @@ def init_params():
     # Initiating Google Translate API
     p.google = translate.Client()
 
-    # TODO Different timezones, web server time is in UTC, setting to CET
-    p.tz = 2
+    p.tz = int(os.environ['TIME_ZONE'])
 
     # Setting the default value at start
     p.lunch = check_time()
@@ -136,10 +172,10 @@ def init_params():
 
 def insert_room(data):
     try:
-        room = p.spark.rooms.get(data.roomId)
+        room = p.webex.rooms.get(data.roomId)
         print("INFO: New membership created, updating database information.")
     except SparkApiError as err:
-        msg = "ERROR: Cannot retrieve room '{0}' detailed information from Spark.\n".format(data.roomId) + str(err)
+        msg = "ERROR: Cannot retrieve room '{0}' detailed information from Webex Teams.\n".format(data.roomId) + str(err)
         print(msg)
         send_message(p.admin, msg)
         return
@@ -175,10 +211,10 @@ def delete_room(r):
 
 def get_user(user_id):
     try:
-        person = p.spark.people.get(user_id)
+        person = p.webex.people.get(user_id)
         return person
     except SparkApiError as err:
-        msg = "ERROR: Cannot retrieve person '{0}' detailed information from Spark.\n".format(user_id) + str(err)
+        msg = "ERROR: Cannot retrieve person '{0}' detailed information from Webex Teams.\n".format(user_id) + str(err)
         print(msg)
         send_message(p.admin, msg)
         return None
@@ -200,7 +236,7 @@ def insert_user(data, room):
 
 
 def process_message(data):
-    message = p.spark.messages.get(data.id)
+    message = p.webex.messages.get(data.id)
 
     # Loop prevention mechanism, do not respond to my own messages
     if message.personId == p.me.id:
@@ -264,6 +300,7 @@ def process_message(data):
                 cmd.lang,
                 cmd.list,
                 cmd.menu,
+                cmd.recur,
                 cmd.search,
                 cmd.vote
             )
@@ -300,6 +337,10 @@ def process_message(data):
                     menu = get_menu(r, rest_id, ans.no_menu)
                     send_message(r.room_id, menu)
 
+        # Set or unset automatic sending of daily menus at given time every day
+        elif msg['cmd'] == cmd.recur:
+            set_recurrence(r, msg['text'])
+
         # Search for a restaurant
         elif msg['cmd'] == cmd.search:
             if not search_rest(r, msg['text']):
@@ -317,13 +358,13 @@ def process_message(data):
                 else:
                     # Optional time is provided
                     if len(msg['text']) > 1:
-                        date = get_time(msg['text'][1])
+                        date = get_time(msg['text'][1], True)
                         if not date:
-                            date = set_time()
+                            date = set_time(12, 0)
                             send_message(r.room_id, ans.no_time)
                     # Setting default time
                     else:
-                        date = set_time()
+                        date = set_time(12, 0)
                         send_message(r.room_id, ans.no_time)
 
                     # Voting for the restaurant
@@ -339,10 +380,10 @@ def process_message(data):
 
 def message_deleted(data):
     try:
-        person = p.spark.people.get(data.personId)
+        person = p.webex.people.get(data.personId)
         print("INFO: User " + person.displayName + " has deleted its own message.")
     except SparkApiError as err:
-        msg = "ERROR: Cannot retrieve person '{0}' detailed information from Spark.\n".format(data.personId) + str(err)
+        msg = "ERROR: Cannot retrieve person '{0}' detailed information from Webex Teams.\n".format(data.personId) + str(err)
         print(msg)
         send_message(p.admin, msg)
 
@@ -415,9 +456,9 @@ def get_restaurant(r, val):
 
 def format_menu(dish):
     if dish['price']:
-        return "- **{0}** - {1}\n".format(dish['name'].strip(" *"), dish['price'])
+        return "- **{0}** - {1}\n".format(dish['name'].strip(" *").rstrip('\r\n'), dish['price'])
     else:
-        return "- **{0}**\n".format(dish['name'].strip(" *"))
+        return "- **{0}**\n".format(dish['name'].strip(" *").rstrip('\r\n'))
 
 
 def get_menu(r, rest_id, empty):
@@ -429,18 +470,25 @@ def get_menu(r, rest_id, empty):
     # Check if the restaurant is in the exception list
     if rest_id in p.websites.restaurants:
         day = datetime.today().weekday()
-        dishes = p.websites.get_menu(rest_id, day)
-        msg = str()
-        for dish in dishes:
-            # Translating dish into desired language using autodetect of Google Translate API
-            translation = p.google.translate(dish['name'], target_language=r.room_lang)
-            dish['name'] = translation['translatedText']
-            msg += format_menu(dish)
+        # Some websites might change their HTML code, it can generate error
+        try:
+            dishes = p.websites.get_menu(rest_id, day)
+            msg = str()
+            for dish in dishes:
+                # Translating dish into desired language using autodetect of Google Translate API
+                translation = p.google.translate(dish['name'], target_language=r.room_lang)
+                dish['name'] = translation['translatedText']
+                msg += format_menu(dish)
 
-        # Store the menu in the cache using database
-        data = (rest_id, r.room_lang, msg, msg)
-        p.db.insert_menu(data)
-        return msg
+                # Store the menu in the cache using database
+                data = (rest_id, r.room_lang, msg, msg)
+                p.db.insert_menu(data)
+            return msg
+
+        except Exception as err:
+            print("ERROR: Cannot get the menu from the restaurant - {0}".format(rest_id))
+            print(err)
+            return empty
 
     # Get the menus from the Zomato
     menu = p.zomato.menu(rest_id)
@@ -458,6 +506,7 @@ def get_menu(r, rest_id, empty):
             translation = p.google.translate(dish['dish']['name'], target_language=r.room_lang)
             dish['dish']['name'] = translation['translatedText']
             msg += format_menu(dish['dish'])
+
         # Store the menu in the cache using database
         data = (rest_id, r.room_lang, msg, msg)
         p.db.insert_menu(data)
@@ -478,7 +527,7 @@ def get_menus(r, empty):
         menus += get_menu(r, rest[0], empty)
         menus += "\n\n"
 
-        # Spark does not support messages longer than 10000 characters with encryption
+        # Webex Teams does not support messages longer than 10000 characters with encryption
         if len(menus) > 5000:
             send_message(r.room_id, menus)
             menus = str()
@@ -562,6 +611,37 @@ def set_lang(r, lang):
     send_message(r.room_id, ans.lang_set.format(cmd.help))
 
 
+def set_recurrence(r, recurrence_time):
+    ans = Answers(r.room_lang)
+    flag = False
+    default = datetime.now().replace(hour=11, minute=0, second=0, microsecond=0) - timedelta(hours=p.tz)
+
+    # Set or unset this capability
+    if not recurrence_time:
+        recurrence = p.db.select_recurrence([r.room_id])
+        # Setting automating sending of menus for the given room
+        if not recurrence:
+            data = (r.room_id, default, 0, default)
+            p.db.insert_recurrence(data)
+        # Disabling automatic sending of menus for the given room
+        else:
+            p.db.delete_recurrence([r.room_id])
+
+    # Set or update time of this capability
+    else:
+        date = get_time(recurrence_time[0], False)
+        if not date:
+            flag = True
+            date = default
+        data = (r.room_id, date, 0, date)
+        p.db.insert_recurrence(data)
+
+    if not flag:
+        send_message(r.room_id, ans.recurrence_set)
+    else:
+        send_message(r.room_id, ans.recurrence_bad)
+
+
 def check_time():
     # Lunch menus are not available during weekends
     day = datetime.today().weekday()
@@ -579,16 +659,17 @@ def flush_cache():
     now = datetime.now() + timedelta(hours=p.tz)
     time = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
 
-    # Flushing the cache of daily menus
+    # Flushing the cache of daily menus and refreshing the database for new automatic menu sending
     if 0 <= time <= 60:
         print("INFO: It is the new day, deleting stored daily menu dishes from cache memory.")
         p.db.delete_menu()
+        p.db.update_recurrences()
 
 
-def get_time(val):
+def get_time(val, past_time):
     now = datetime.now()
     # Regular expression pattern to match hours and minutes during lunch time
-    pattern = "(1[1234])[ .:-]?([0-5][0-9])?"
+    pattern = "(1[0-4])[ .:-]?([0-5][0-9])?"
     time = re.match(pattern, val.strip())
 
     if not time:
@@ -600,15 +681,20 @@ def get_time(val):
             minute = int(time.group(2))
         # Creating the date based on the provided time
         date = now.replace(hour=hour, minute=minute, second=0, microsecond=0) - timedelta(hours=p.tz)
-        # Checking the time frame of provided hour
-        if date < now:
-            return None
-        return date
+
+        if not past_time:
+            return date
+
+        else:
+            # Checking the time frame of provided hour
+            if date < now:
+                return None
+            return date
 
 
-def set_time():
+def set_time(hours, minutes):
     now = datetime.now()
-    noon = now.replace(hour=12, minute=0, second=0) - timedelta(hours=p.tz)
+    noon = now.replace(hour=hours, minute=minutes, second=0) - timedelta(hours=p.tz)
     # Set the hour to the next hour if it is after
     if now > noon:
         return now.replace(minute=0, second=0) + timedelta(hours=1)
@@ -629,14 +715,14 @@ def set_vote(r, val, date):
 
 def send_message(room, msg):
     if not msg:
-        msg = "ERROR: Cannot send empty message to the Spark user."
+        msg = "ERROR: Cannot send empty message to the Webex Teams user."
         print(msg)
         send_message(p.admin, msg)
         return
     try:
-        p.spark.messages.create(roomId=room, markdown=msg)
+        p.webex.messages.create(roomId=room, markdown=msg)
     except SparkApiError as err:
-        print("WARNING: Cannot send message to the Spark user.")
+        print("WARNING: Cannot send message to the Webex Teams user.")
         print(err)
 
 
@@ -680,6 +766,21 @@ class Worker(Thread):
             now = datetime.now()
             end = now + timedelta(minutes=15)
 
+            # Sending the menu automatically only during the weekdays
+            if datetime.today().weekday() < 5:
+
+                # Retrieving the whole table of recurrences and sending the menu automatically
+                recurrences = p.db.select_recurrences()
+                if recurrences:
+                    for recurrence in recurrences:
+                        # Current time is bigger and the menus have not been sent yet
+                        if now.time() > recurrence[1].time() and recurrence[2] == 0:
+                            r = p.db.select_room([recurrence[0]])
+                            ans = Answers(r.room_lang)
+                            if not get_menus(r, ans.no_menu):
+                                send_message(r.room_id, ans.bad_param)
+                            p.db.update_recurrence([r.room_id])
+
             # Retrieving the whole table of votes
             data = (now, end)
             votes = p.db.select_votes(data)
@@ -703,7 +804,7 @@ class Worker(Thread):
                         minute = (room[4] + timedelta(hours=p.tz)).minute
                         if room[2] == "direct":
                             u = p.db.select_user([room[0]])
-                            msg += "- <@personEmail:{0}> - {1:d}:{2:02d}\n".format(u.user_email, hour, minute)
+                            msg += "- **{0}** - {1:d}:{2:02d}\n".format(u.user_name, hour, minute)
                         else:
                             msg += "- **{0}** - {1:d}:{2:02d}\n".format(room[1], hour, minute)
                 print("INFO: Sending the notification to room {0} about the restaurant {1}.".format(vote[3], vote[5]))
@@ -739,7 +840,7 @@ class Lunchmenu(object):
         if webhook.actorId == p.me.id:
             return
 
-        print("INFO: Spark webhook received - {0} {1}.".format(webhook.resource, webhook.event))
+        print("INFO: Webex Teams webhook received - {0} {1}.".format(webhook.resource, webhook.event))
 
         # Memberships event
         if webhook.resource == "memberships":
@@ -776,13 +877,15 @@ class Lunchmenu(object):
 def main():
     # Performing environment and health checks
     check_environment()
-    p.spark = CiscoSparkAPI()
+    p.webex = CiscoSparkAPI()
     check_webhooks()
     p.db = init_database()
     try:
         init_params()
     except Exception as e:
         system_error(e, "Cannot initialize default parameters.")
+    check_database()
+
     urls = ("/api/lunchmenu", "Lunchmenu")
     app = object()
     thread = object()

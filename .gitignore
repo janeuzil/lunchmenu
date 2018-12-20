@@ -12,3 +12,6 @@ gcp_sak.json
 
 # Compiled Python scripts used in virtual environment
 *.pyc
+
+# Images
+img/

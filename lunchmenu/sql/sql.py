@@ -78,6 +78,7 @@ class Database(object):
         self.__commit_sql(self.__tables.create_search(), None)
         self.__commit_sql(self.__tables.create_votes(), None)
         self.__commit_sql(self.__tables.create_menus(), None)
+        self.__commit_sql(self.__tables.create_recurrence(), None)
 
     def insert_room(self, data):
         self.__commit_sql(self.__insert.insert_room(), data)
@@ -100,6 +101,9 @@ class Database(object):
     def insert_menu(self, data):
         self.__commit_sql(self.__insert.insert_menu(), data)
 
+    def insert_recurrence(self, data):
+        self.__commit_sql(self.__insert.insert_recurrence(), data)
+
     def update_room(self, data):
         self.__commit_sql(self.__update.update_room(), data)
 
@@ -112,6 +116,30 @@ class Database(object):
     def update_votes(self, data):
         self.__commit_sql(self.__update.update_vote(), data)
 
+    def update_recurrence(self, data):
+        self.__commit_sql(self.__update.update_recurrence(), data)
+
+    def update_recurrences(self):
+        self.__commit_sql(self.__update.update_recurrences(), None)
+
+    def delete_room(self, data):
+        self.__commit_sql(self.__delete.delete_room(), data)
+
+    def delete_search(self, data):
+        self.__commit_sql(self.__delete.delete_search(), data)
+
+    def delete_favourite(self, data):
+        self.__commit_sql(self.__delete.delete_favourite(), data)
+
+    def delete_vote(self):
+        self.__commit_sql(self.__delete.delete_vote(), None)
+
+    def delete_menu(self):
+        self.__commit_sql(self.__delete.delete_menu(), None)
+
+    def delete_recurrence(self, data):
+        self.__commit_sql(self.__delete.delete_recurrence(), data)
+
     def select_room(self, data):
         result = self.__query_sql(self.__select.select_room(), data)
         if result:
@@ -119,6 +147,13 @@ class Database(object):
                 result[0][0], result[0][1], result[0][2], result[0][3],
                 result[0][4], result[0][5], result[0][6]
             )
+        else:
+            return None
+
+    def select_rooms(self):
+        result = self.__query_sql(self.__select.select_rooms(), None)
+        if result:
+            return result
         else:
             return None
 
@@ -164,20 +199,19 @@ class Database(object):
         else:
             return None
 
-    def delete_room(self, data):
-        self.__commit_sql(self.__delete.delete_room(), data)
+    def select_recurrence(self, data):
+        result = self.__query_sql(self.__select.select_recurrence(), data)
+        if result:
+            return result
+        else:
+            return None
 
-    def delete_search(self, data):
-        self.__commit_sql(self.__delete.delete_search(), data)
-
-    def delete_favourite(self, data):
-        self.__commit_sql(self.__delete.delete_favourite(), data)
-
-    def delete_vote(self):
-        self.__commit_sql(self.__delete.delete_vote(), None)
-
-    def delete_menu(self):
-        self.__commit_sql(self.__delete.delete_menu(), None)
+    def select_recurrences(self):
+        result = self.__query_sql(self.__select.select_recurrences(), None)
+        if result:
+            return result
+        else:
+            return None
 
     class Tables(object):
         def __init__(self):
@@ -248,6 +282,16 @@ class Database(object):
                 "REFERENCES restaurants(rest_id) ON DELETE CASCADE ON UPDATE CASCADE)"
             )
 
+            self.__recurrence = (
+                "CREATE TABLE IF NOT EXISTS recurrence("
+                "room_id VARCHAR(128) NOT NULL,"
+                "recurrence_time DATETIME NOT NULL,"
+                "recurrence_sent TINYINT NOT NULL,"
+                "PRIMARY KEY (room_id),"
+                "CONSTRAINT room_r_constr FOREIGN KEY room_r_vk(room_id)"
+                "REFERENCES rooms(room_id) ON DELETE CASCADE ON UPDATE CASCADE)"
+            )
+
         def create_rooms(self):
             return self.__rooms
 
@@ -269,32 +313,39 @@ class Database(object):
         def create_menus(self):
             return self.__menus
 
+        def create_recurrence(self):
+            return self.__recurrence
+
     class Insert(object):
         def __init__(self):
             self.__room = (
-                "INSERT INTO rooms (room_id, room_membership, room_active, room_name, room_type)"
-                "VALUES (%s, %s, 1, %s, %s) ON DUPLICATE KEY UPDATE room_active = 1"
+                "INSERT INTO rooms(room_id, room_membership, room_active, room_name, room_type)"
+                "VALUES(%s, %s, 1, %s, %s) ON DUPLICATE KEY UPDATE room_active = 1"
             )
             self.__user = (
-                "INSERT INTO users (user_id, room_id, user_name, user_email)"
-                "VALUES (%s, %s, %s, %s) ON DUPLICATE KEY UPDATE room_id = %s"
+                "INSERT INTO users(user_id, room_id, user_name, user_email)"
+                "VALUES(%s, %s, %s, %s) ON DUPLICATE KEY UPDATE room_id = %s"
             )
             self.__restaurant = (
-                "INSERT INTO restaurants (rest_id, rest_name, rest_address) VALUES (%s, %s, %s)"
+                "INSERT INTO restaurants(rest_id, rest_name, rest_address) VALUES(%s, %s, %s)"
                 "ON DUPLICATE KEY UPDATE rest_id = %s"
             )
             self.__favourite = (
-                "INSERT INTO favourites (room_id, rest_id) VALUES (%s, %s)"
+                "INSERT INTO favourites(room_id, rest_id) VALUES(%s, %s)"
                 "ON DUPLICATE KEY UPDATE room_id = %s"
             )
-            self.__search = "INSERT INTO search (room_id, rest_id, rest_num) VALUES (%s, %s, %s)"
+            self.__search = "INSERT INTO search (room_id, rest_id, rest_num) VALUES(%s, %s, %s)"
             self.__vote = (
-                "INSERT INTO votes (room_id, rest_id, vote_date, vote_sent) VALUE (%s, %s, %s, %s)"
+                "INSERT INTO votes(room_id, rest_id, vote_date, vote_sent) VALUE(%s, %s, %s, %s)"
                 "ON DUPLICATE KEY UPDATE vote_date = %s"
             )
             self.__menu = (
-                "INSERT INTO menus (rest_id, room_lang, menu_dishes) VALUE (%s, %s, %s)"
+                "INSERT INTO menus(rest_id, room_lang, menu_dishes) VALUE(%s, %s, %s)"
                 "ON DUPLICATE KEY UPDATE menu_dishes = %s"
+            )
+            self.__recurrence = (
+                "INSERT INTO recurrence(room_id, recurrence_time, recurrence_sent) VALUE(%s, %s, %s)"
+                "ON DUPLICATE KEY UPDATE recurrence_time = %s, recurrence_sent = 0"
             )
 
         def insert_room(self):
@@ -318,12 +369,17 @@ class Database(object):
         def insert_menu(self):
             return self.__menu
 
+        def insert_recurrence(self):
+            return self.__recurrence
+
     class Update(object):
         def __init__(self):
             self.__room = "UPDATE rooms SET room_active = %s WHERE room_id = %s"
             self.__city = "UPDATE rooms SET room_city = %s WHERE room_id = %s"
             self.__lang = "UPDATE rooms SET room_lang = %s WHERE room_id = %s"
             self.__vote = "UPDATE votes SET vote_sent = 1 WHERE room_id = %s AND rest_id = %s"
+            self.__recurrence = "UPDATE recurrence SET recurrence_sent = 1 WHERE room_id = %s"
+            self.__recurrences = "UPDATE recurrence SET recurrence_sent = 0"
 
         def update_room(self):
             return self.__room
@@ -337,6 +393,12 @@ class Database(object):
         def update_vote(self):
             return self.__vote
 
+        def update_recurrence(self):
+            return self.__recurrence
+
+        def update_recurrences(self):
+            return self.__recurrences
+
     class Delete(object):
         def __init__(self):
             self.__room = "DELETE FROM rooms WHERE room_id = %s"
@@ -344,6 +406,7 @@ class Database(object):
             self.__favourite = "DELETE FROM favourites WHERE room_id = %s AND rest_id = %s"
             self.__vote = "DELETE FROM votes"
             self.__menu = "DELETE FROM menus"
+            self.__recurrence = "DELETE FROM recurrence WHERE room_id = %s"
 
         def delete_room(self):
             return self.__room
@@ -360,9 +423,13 @@ class Database(object):
         def delete_menu(self):
             return self.__menu
 
+        def delete_recurrence(self):
+            return self.__recurrence
+
     class Select(object):
         def __init__(self):
             self.__room = "SELECT * FROM rooms WHERE room_id = %s"
+            self.__rooms = "SELECT * FROM rooms"
             self.__user = "SELECT * FROM users WHERE room_id = %s ORDER BY user_email"
             self.__search = "SELECT rest_id FROM search WHERE room_id = %s AND rest_num = %s"
             self.__restaurant = (
@@ -380,9 +447,14 @@ class Database(object):
                 "WHERE v.room_id != %s AND v.rest_id = %s AND v.vote_date > %s"
             )
             self.__menu = "SELECT menu_dishes FROM menus WHERE rest_id = %s AND room_lang = %s"
+            self.__recurrence = "SELECT * FROM recurrence WHERE room_id = %s"
+            self.__recurrences = "SELECT * FROM recurrence"
 
         def select_room(self):
             return self.__room
+
+        def select_rooms(self):
+            return self.__rooms
 
         def select_user(self):
             return self.__user
@@ -401,3 +473,9 @@ class Database(object):
 
         def select_menu(self):
             return self.__menu
+
+        def select_recurrence(self):
+            return self.__recurrence
+
+        def select_recurrences(self):
+            return self.__recurrences

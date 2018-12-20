@@ -2,6 +2,12 @@
 
 This file is a manually maintained list of changes for each release.
 
+## v0.5.0 (2018-12-20)
+
+- Automatic sending the menu at given time each working day
+- Database self check for the rooms
+- Minor bugfixes
+
 ## v0.4.0 (2018-06-18)
 
 - Adjustable search areas, not just Prague city

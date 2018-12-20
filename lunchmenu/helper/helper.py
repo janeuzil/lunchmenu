@@ -6,7 +6,7 @@ from lxml import html
 
 class Params(object):
     def __init__(self):
-        self.spark = object()
+        self.webex = object()
         self.zomato = object()
         self.websites = object()
         self.google = object()
@@ -73,7 +73,9 @@ class Websites(object):
             16510118,  # Kolkovna
             16517493,  # Hooters
             16506101,  # La Gare
-            16506344  # Pizza Coloseum
+            16506344,  # Pizza Coloseum
+            16506517,  # Na Pekarce
+            16506646   # Midtown Grill
         )
         self.week = (
             "monday",
@@ -268,8 +270,48 @@ class Websites(object):
             return dishes
 
         elif rest_id == 16506344:
-            url = "https://pizzacoloseum.cz/na-porici/denni-menu"
+            url = "http://pizzacoloseum.cz/na-porici/denni-menu"
+            r = requests.get(url)
+            tree = html.fromstring(r.content.replace("<span>", ""))
+
+            menu = tree.xpath('//div[@class="content-cesky-preklad"]/text()')
+            prices = tree.xpath('//div[@class="field-cena-content"]/text()')
+            allergens = tree.xpath('//div[@class="content-alergeny"]/text()')
+
+            # Creating dishes
+            tmp = list()
+            for name, allergen, price in zip(menu, allergens, prices):
+                tmp.append({'name': name + ", " + allergen, 'price': price})
+
+            # Selecting only the soup of the day and rest of the week menu
+            dishes.append(tmp[day])
+            for dish in tmp[5:]:
+                dishes.append(dish)
+
+            return dishes
+
+        elif rest_id == 16506517:
+            url = "http://www.napekarce.cz"
+            r = requests.get(url)
+            tree = html.fromstring(r.content.replace("<br />", ",  "))
+
+            path = '//table[@class="dailyMenuTable"]'
+            weights = tree.xpath(path + '//td[@class="td-cislo"]/text()')
+            menu = tree.xpath(path + '//span[@class="td-jidlo-obsah"]/text()')
+            prices = tree.xpath(path + '//td[@class="td-cena"]/text()')
+
+            # Stripping and filtering the answer
+            menu = self.strip_menu(menu)
+
+            # Creating dishes
+            for weight, name, price in zip(weights, menu, prices):
+                dishes.append({'name': weight + " - " + name, 'price': price})
+            return dishes
+
+        elif rest_id == 16506646:
+            url = "https://www.midtowngrill.cz/poledn-menu/"
             dishes.append({'name': url, 'price': None})
             return dishes
 
-        return dishes
+        else:
+            return dishes

@@ -21,17 +21,18 @@ class Answers(object):
                 "- **{1}  &lt;číslo&gt;** - přidá zařízení na Váš seznam oblíbených restaurací\n" +
                 "- **{2} &lt;číslo&gt;** - odebere zařízení z Vašeho seznamu oblíbených restaurací\n"
                 "- **{3}** - zobrazí tuto nápovědu\n"
-                "- **{4}** - nastaví město či oblast pro hledání, výchozí je Praha\n"
+                "- **{4} &lt;město&gt;** - nastaví město či oblast pro hledání, výchozí je Praha\n"
                 "- **{5} &lt;jazyk&gt;** - nastaví jazyk\n"
                 "- **{6}** - zobrazí seznam Vašich oblíbených restaurací\n"
                 "- **{7} [číslo]** - zobrazí denní menu zvolené restaurace\n"
-                "- **{8} &lt;název&gt;** - vyhledá seznam restaurací na základě uvedeného názvu\n"
-                "- **{9} &lt;číslo&gt; [čas]** - vyjádří Váš zájem jít dnes do dané restaurace v uvedený čas\n\n"
+                "- **{8} [čas]** - nastaví nebo vypne posílání denního menu každý den v určitém čase\n"
+                "- **{9} &lt;název&gt;** - vyhledá seznam restaurací na základě uvedeného názvu\n"
+                "- **{10} &lt;číslo&gt; [čas]** - vyjádří Váš zájem jít dnes do dané restaurace v uvedený čas\n\n"
                 "Vysvětlivky:\n"
                 "- **&lt;argument&gt;** - povinný argument\n"
                 "- **[argument]** - volitelný argument\n\n"
                 "Příklady:\n"
-                "- **{8} U Očka** - zobrazí seznam restaurací s názvem U Očka a jejich adresy\n"
+                "- **{9} U Očka** - zobrazí seznam restaurací s názvem U Očka a jejich adresy\n"
                 "- **{1} 2** - přidá druhou restauraci z předchozího hledání na Váš seznam\n"
                 "- **{7} 1** - zobrazí denní menu restaurace na druhé pozici ve Vašem seznamu\n"
                 "- **{7}** - zobrazí všechna denní menu restaurací z Vašeho seznamu\n"
@@ -87,6 +88,8 @@ class Answers(object):
             )
             self.vote_late = "Omlouvám se, ale pro dnešní den je již hlasování ukončeno. Zkuste to prosím zítra."
             self.no_votes = "Omlouvám se, ale nikdo neprojevil zájem jít dnes do této restaurace."
+            self.recurrence_set = "Automatické posílání denních menu každý den bylo úspěšně nastaveno/vypnuto."
+            self.recurrence_bad = "Byl zadán neplatný čas, automatické posílání bylo nastaveno na 11:00."
 
         elif lang == "en":
             self.help = (
@@ -95,17 +98,18 @@ class Answers(object):
                     "- **{1}  &lt;number&gt;** - to add a favourite restaurant to the personal list\n" +
                     "- **{2} &lt;number&gt;** - to delete a favourite restaurant from the personal list\n"
                     "- **{3}** - to show this help\n"
-                    "- **{4}** - to set the city for searching, default is Prague\n"
+                    "- **{4} &lt;area&gt;** - to set the city for searching, default is Prague\n"
                     "- **{5} &lt;language&gt;** - to set the language\n"
                     "- **{6}** - to list your favourite restaurants\n"
                     "- **{7} [number]** - to get the lunch menu of a given restaurant\n"
-                    "- **{8} &lt;name&gt;** - to search for a restaurants\n"
-                    "- **{9} &lt;number&gt; [time]** - to vote for a restaurant of a day at the given time\n\n"
+                    "- **{8} [time]** - to set or unset sending the daily menus every day at given time\n"
+                    "- **{9} &lt;name&gt;** - to search for a restaurants\n"
+                    "- **{10} &lt;number&gt; [time]** - to vote for a restaurant of a day at the given time\n\n"
                     "Glossary:\n"
                     "- **&lt;argument&gt;** - mandatory argument\n"
                     "- **[argument]** - optional argument\n\n"
                     "Examples:\n"
-                    "- **{8} Moe's Tavern** - will display list of restaurants Moe's Tavern and their addresses\n"
+                    "- **{9} Moe's Tavern** - will display list of restaurants Moe's Tavern and their addresses\n"
                     "- **{1} 2** - will add second restaurant from the previous search in the list\n"
                     "- **{7} 1** - will show the lunch menu for the restaurant first in your list\n"
                     "- **{7}** - will print all the daily menus of your favourite restaurants\n\n"
@@ -183,6 +187,8 @@ class Answers(object):
             )
             self.vote_late = "I am sorry, but it is too late to vote. Try it tomorrow."
             self.no_votes = "I am sorry, but no one has the intention to go into this restaurant today."
+            self.recurrence_set = "Automatic sending of daily menus has been successfully set/unset."
+            self.recurrence_bad = "Incorrect time specified, setting automatic sending of menus at 11:00."
 
         elif lang == "hr":
             self.help = (
@@ -191,17 +197,18 @@ class Answers(object):
                     "- **{1}  &lt;broj&gt;** - za dodavanje omiljenog restorana u personaliziranu listu\n" +
                     "- **{2} &lt;broj&gt;** - za brisanje restorana iz personalizirane liste\n"
                     "- **{3}** - za prikaz pomoći\n"
-                    "- **{4}** - za postavljanje grada za pretragu, zadano je Prag\n"
+                    "- **{4} &lt;oblast&gt;** - za postavljanje grada za pretragu, zadano je Prag\n"
                     "- **{5} &lt;jezik&gt;** - za postavljanje jezika\n"
                     "- **{6}** - za ispis tvojih omiljenih restorana\n"
                     "- **{7} [broj]** - za prikaz dnevnog menija\n"
-                    "- **{8} &lt;ime&gt;** - za pretragu restorana\n"
-                    "- **{9} &lt;broj&gt; [sat]** - za glasanje za restoran dana za zadano vrijeme\n\n"
+                    "- **{8} [sat]** - postaviti ili deaktivirati dnevne izbornike svaki dan u određeno vrijeme\n"
+                    "- **{9} &lt;ime&gt;** - za pretragu restorana\n"
+                    "- **{10} &lt;broj&gt; [sat]** - za glasanje za restoran dana za zadano vrijeme\n\n"
                     "Glosar:\n"
                     "- **&lt;argument&gt;** - obavezni argument\n"
                     "- **[argument]** - neobavezni argument\n\n"
                     "Primjeri:\n"
-                    "- **{8} Mrzla Piva** - će ispisati sve restorane s imenom Mrzla Piva i njihove adrese\n"
+                    "- **{9} Mrzla Piva** - će ispisati sve restorane s imenom Mrzla Piva i njihove adrese\n"
                     "- **{1} 2** - će dodati restoran pod rednim brojem 2 iz prethodne pretrage\n"
                     "- **{7} 1** - će prikazati dnevni meni za prvi restoran u tvojoj listi\n"
                     "- **{7}** - će ispisati sve dnevne menije tvojih omiljenih restorana\n\n"
@@ -254,6 +261,8 @@ class Answers(object):
             )
             self.vote_late = "Oprosti, prekasno je za glasanje. Pokušaj sutra."
             self.no_votes = "Oprosti, ali nitko od kolega nema namjeru ići u taj restoran danas."
+            self.recurrence_set = "Automatsko dnevno biranje dnevnih izbornika uspješno je postavljeno/deaktivirano."
+            self.recurrence_bad = "Postavljeno je vrijeme nevažeće, automatsko slanje postavljeno je na 11:00."
 
         elif lang == "pl":
             self.help = (
@@ -262,17 +271,18 @@ class Answers(object):
                     "- **{1}  &lt;numer&gt;** - dodanie ulubionej restauracji do osobistej listy\n" +
                     "- **{2} &lt;numer&gt;** - usuwanie ulubionej restauracji z osobistej listy\n"
                     "- **{3}** - wyświetlenie tej pomocy\n"
-                    "- **{4}** - aby ustawić miasto do przeszukania, domyślna jest Praga\n"
+                    "- **{4} &lt;obszar&gt;** - aby ustawić miasto do przeszukania, domyślna jest Praga\n"
                     "- **{5} &lt;język&gt;** - zmiana języka\n"
                     "- **{6}** - wyświetlenie listy Twoich ulubionych restauracji\n"
                     "- **{7} [numer]** - wyświetlenie menu lunchowego\n"
-                    "- **{8} &lt;imię&gt;** - wyszukanie restauracji\n"
-                    "- **{9} &lt;numer&gt; [godzina]** - aby zagłosować na restaurację na dziś o podanej godzinie\n\n"
+                    "- **{8} [godzina]** - codziennie ustawiaj lub dezaktywuj codzienne menu o określonej godzinie\n"
+                    "- **{9} &lt;imię&gt;** - wyszukanie restauracji\n"
+                    "- **{10} &lt;numer&gt; [godzina]** - aby zagłosować na restaurację na dziś o podanej godzinie\n\n"
                     "Słownik:\n"
                     "- **&lt;argument&gt;** - wymagany argument\n"
                     "- **[argument]** - fakultatywny argument\n\n"
                     "Przykłady:\n"
-                    "- **{8} Moe's Tavern** - wyświetlenie listy restauracji Moe's Tavern i ich adresów\n"
+                    "- **{9} Moe's Tavern** - wyświetlenie listy restauracji Moe's Tavern i ich adresów\n"
                     "- **{1} 2** - dodanie drugiej restauracji z wyników wyszukiwania do listy ulubionych restauracji\n"
                     "- **{7} 1** - wyświetlenie menu lunchowego pierwszej restauracji z listy ulubionych restauracji\n"
                     "- **{7}** - wyświetlenie menu lunchowych wszystkich restauracji z listy\n\n"
@@ -323,6 +333,10 @@ class Answers(object):
             )
             self.vote_late = "Wybacz, ale jest już za późno na głosowanie. Spróbuj jutro."
             self.no_votes = "Wybacz, ale nikt nie wybiera się dziś do tej restauracji."
+            self.recurrence_set = (
+                "Automatyczne codzienne wybieranie codziennych menu zostało pomyślnie ustawione/dezaktywowane."
+            )
+            self.recurrence_bad = "Ustalono nieprawidłowy czas, automatyczne wysyłanie zostało ustawione na 11:00."
 
         elif lang == "ru":
             self.help = (
@@ -331,16 +345,17 @@ class Answers(object):
                 "- **{1} &lt;цифра&gt;** - чтобы  добавить ресторан в Список избранных ресторанов\n" +
                 "- **{2} &lt;цифра&gt;** - чтобы удалить избранный ресторан из Моего Списка\n"
                 "- **{3}** - чтобы показать подсказки\n"
-                "- **{4}** - \n"
+                "- **{4} &lt;область&gt;** - для определения города для поиска, по умолчанию Прага\n"
                 "- **{5} &lt;язык&gt;** - чтобы настроить язык\n"
                 "- **{6}** - чтобы показать список избранных ресторанов\n"
-                "- **{7} [имя}** -  \n"
-                "- **{8} &lt;цифра&gt;** - чтобы получить меню\n"
-                "- **{9} &lt;имя&gt;** - чтобы найти ресторан\n\n"
+                "- **{7} [имя}** - получить меню обеданного ресторана\n"
+                "- **{8} [время]** - устанавливать или отменять ежедневную отправку ежедневных меню в указанное время\n"
+                "- **{9} &lt;цифра&gt;** - чтобы получить меню\n"
+                "- **{10} &lt;имя&gt; [время]** - чтобы найти ресторан\n\n"
                 "Примечания:\n"
                 "- **&lt;аргумент&gt;** - обязательный аргумент\n\n"
                 "Примеры:\n"
-                "- **{8} Кафе Пушкинъ** - покажет список ресторанов Moe's Tavern и их местоположение\n"
+                "- **{9} Кафе Пушкинъ** - покажет список ресторанов Moe's Tavern и их местоположение\n"
                 "- **{1} 2** - добавит второй ресторан из предыдущего поиска\n"
                 "- **{7} 1** - покажет меню ресторана, который находится первым в вашем списке\n"
                 "- **{7}** - распечатает меню ваших избранных ресторанов \n\n"
@@ -396,6 +411,10 @@ class Answers(object):
             )
             self.vote_late = "Извините, но сегодняшнее голосование уже закончилось. Попробуйте завтра, пожалуйста."
             self.no_votes = "Извините, но сегодня никто не хочет идти в этот ресторан."
+            self.recurrence_set = "Автоматический ежедневный набор ежедневных меню был успешно установлен/деактивирован."
+            self.recurrence_bad = (
+                "Недействительное время было установлено, автоматическая отправка была установлена на 11:00."
+            )
 
         elif lang == "sk":
             self.help = (
@@ -404,17 +423,18 @@ class Answers(object):
                     "- **{1}  &lt;číslo&gt;** - pridá zariadenie na Váš zoznam obľúbených reštaurácií\n" +
                     "- **{2} &lt;číslo&gt;** - odoberie zariadenie z Vášho zoznamu obľúbených reštaurácií\n"
                     "- **{3}** - zobrazí túto nápovedu\n"
-                    "- **{4}** - nastaví mesto pre hladanie, predvolená je Praha\n"
+                    "- **{4} &lt;oblasť&gt;** - nastaví mesto pre hladanie, predvolená je Praha\n"
                     "- **{5} &lt;jazyk&gt;** - nastaví jazyk\n"
                     "- **{6}** - zobrazí zoznam Vaších obľúbených reštaurácií\n"
                     "- **{7} [číslo]** - zobrazí denné menu zvolenej reštaurácie\n"
-                    "- **{8} &lt;názov&gt;** - vyhľadá zoznam reštaurácií na základe uvedeného názvu\n"
-                    "- **{9} &lt;číslo&gt; [čas]** - hlasovanie pre reštauráciu dňa pre zvolený čas\n\n"                    
+                    "- **{8} [čas]** - nastaví alebo vypne posielanie denného menu každý deň v určitom čase\n"
+                    "- **{9} &lt;názov&gt;** - vyhľadá zoznam reštaurácií na základe uvedeného názvu\n"
+                    "- **{10} &lt;číslo&gt; [čas]** - hlasovanie pre reštauráciu dňa pre zvolený čas\n\n"                    
                     "Vysvetlivky:\n"
                     "- **&lt;argument&gt;** - povinný argument\n"
                     "- **[argument]** - voliteľný argument\n"
                     "Príklady:\n"
-                    "- **{8} U Očka** - zobrazí zoznam reštaurácií s názvom U Očka a ich adresy\n"
+                    "- **{9} U Očka** - zobrazí zoznam reštaurácií s názvom U Očka a ich adresy\n"
                     "- **{1} 2** - pridá druhú reštauráciu z predchádzajúceho hľadania na Váš zoznam\n"
                     "- **{7} 1** - zobrazí denné menu reštaurácie na druhej pozícií vo Vašom zozname\n"
                     "- **{7}** - zobrazí všetky denné menu reštaurácií z Vášho zoznamu\n\n"
@@ -468,6 +488,8 @@ class Answers(object):
             )
             self.vote_late = "Ospravedlňujem sa, ale dnešný čas na hlasovanie už vypršal. Skúste to prosím zajtra."
             self.no_votes = "Ospravedlňujem sa, ale žiadny z kolegov nemal dnes záujem o túto reštauráciu."
+            self.recurrence_set = "Automatické posielanie denných menu každý deň bolo úspešne nastavené/vypnuté."
+            self.recurrence_bad = "Bol zadaný neplatný čas, automatické posielanie bolo nastavené na 11:00."
 
         elif lang == "tr":
             self.help = (
@@ -476,19 +498,21 @@ class Answers(object):
                     "- **{1}  &lt;sayı&gt;** - Beğendiğiniz restoranları kişisel listenize ekleyin\n" +
                     "- **{2} &lt;sayı&gt;** - Restoranları kişisel listenizden silin\n"
                     "- **{3}** - Neler yapabileceğimi görün\n"
-                    "- **{4} &lt;dil&gt;** - Dili değiştirin\n"
-                    "- **{5}** - Kişisel restoran listenizi görüntüleyin\n"
-                    "- **{6} [sayı]** - Ögle menüsünü oğrenin\n"
-                    "- **{7} &lt;isim&gt;** - Restoranları arayın\n"
-                    "- **{8} &lt;sayı&gt; [zaman]** - to vote for a restaurant of a day at the given time\n\n"
+                    "- **{4} &lt;alan&gt;** - Sehir arayin, guncel sehir Prag\n"
+                    "- **{5} &lt;dil&gt;** - Dili değiştirin\n"
+                    "- **{6}** - Kişisel restoran listenizi görüntüleyin\n"
+                    "- **{7} [sayı]** - Ögle menüsünü oğrenin\n"
+                    "- **{8} [zaman]** - Günlük menülere her gün verilen zaman setini ayarlamak veya kaldırmak için\n"
+                    "- **{9} &lt;isim&gt;** - Restoranları arayın\n"
+                    "- **{10} &lt;sayı&gt; [zaman]** - Bugun restorana ne zaman gideceğini belirten\n\n"
                     "Terimler:\n"
                     "- **&lt;terim&gt;** - Zorunlu terimler\n"
                     "- **[terim]** - Isteğe bağlı terimler\n\n"
                     "Örnekler:\n"
-                    "- **{7} Moe's Tavern** - Moe's Tavern isimli restoranları ve adreslerini gösterir\n"
+                    "- **{9} Moe's Tavern** - Moe's Tavern isimli restoranları ve adreslerini gösterir\n"
                     "- **{1} 2** - Arama listesindeki ikinci restoranı kişisel listenize ekler\n"
-                    "- **{6} 1** - Kişisel listenizdeki ilk restoranın öğle menüsünü gösterir\n"
-                    "- **{6}** - Kişisel listenizdeki tüm restoranların öğle menüsünü gösterir\n\n"
+                    "- **{7} 1** - Kişisel listenizdeki ilk restoranın öğle menüsünü gösterir\n"
+                    "- **{7}** - Kişisel listenizdeki tüm restoranların öğle menüsünü gösterir\n\n"
                     "Desteklenen diller:\n"
                     "- **cz** - Çekçe\n"
                     "- **hr** - Hırvatça\n"
@@ -513,6 +537,10 @@ class Answers(object):
                 "Üzgünüm, aradığınız restoran numarası bulunamadı. Sayı veya restoran ismi yanlış."
             )
             self.del_success = "Restoran başarıyla listenizden silindi."
+            self.city_set = "Restoran arama bolgeniz {0} olarak belirlendi."
+            self.city_unknown = (
+                "Üzgünüm, aradığınız bolge bulunamadi. Lutfen daha genis bir bolgeyi deneyiniz."
+            )
             self.lang_set = "Dil ayarı başarıyla değiştirildi. **{0}** yazarak dilinizdeki komutları görüntüleyin."
             self.lang_unsupported = (
                 "Dil algılanamadı veya bu henüz desteklenmeyen bir dil. "
@@ -526,6 +554,8 @@ class Answers(object):
             )
             self.vote_late = "Oylama için geç kaldınız, lütfen yarın tekrar deneyin."
             self.no_votes = "Maalesef bugün sizinle aynı restorana gitmek isteyen kimse yok."
+            self.recurrence_set = "Günlük menülerinin otomatik olarak gönderilmesi başarıyla ayarlandı/çözüldü."
+            self.recurrence_bad = "Yanlış saat belirtildi, saat 11:00'de otomatik olarak menü gönderiliyor."
 
         else:
             raise LangError("Unsupported language - {0}.".format(lang))
@@ -547,6 +577,7 @@ class Commands(object):
             self.lang = "jazyk"
             self.list = "seznam"
             self.menu = "menu"
+            self.recur = "opakuj"
             self.search = "hledej"
             self.vote = "hlasuj"
 
@@ -558,6 +589,7 @@ class Commands(object):
             self.lang = "lang"
             self.list = "list"
             self.menu = "menu"
+            self.recur = "recur"
             self.search = "search"
             self.vote = "vote"
 
@@ -569,6 +601,7 @@ class Commands(object):
             self.lang = "jezik"
             self.list = "lista"
             self.menu = "meni"
+            self.recur = "ponoviti"
             self.search = "pretraga"
             self.vote = "glasaj"
 
@@ -580,6 +613,7 @@ class Commands(object):
             self.lang = "jezyk"
             self.list = "lista"
             self.menu = "menu"
+            self.recur = "powtorz"
             self.search = "wyszukaj"
             self.vote = "glosuj"
 
@@ -591,6 +625,7 @@ class Commands(object):
             self.lang = "язык"
             self.list = "список"
             self.menu = "меню"
+            self.recur = "повторяться"
             self.search = "поиск"
             self.vote = "голосуй"
 
@@ -602,6 +637,7 @@ class Commands(object):
             self.lang = "jazyk"
             self.list = "zoznam"
             self.menu = "menu"
+            self.recur = "opakuj"
             self.search = "hladaj"
             self.vote = "hlasuj"
 
@@ -613,6 +649,7 @@ class Commands(object):
             self.lang = "dil"
             self.list = "liste"
             self.menu = "menu"
+            self.recur = "tekrar"
             self.search = "ara"
             self.vote = "oyla"
 

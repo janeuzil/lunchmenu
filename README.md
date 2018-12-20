@@ -63,6 +63,7 @@ sudo docker run -d -ti \
 -e DB_NAME="lunchmenu" \
 -e DB_USER="lunchmenu" \
 -e DB_PASSWD="*******" \
+-e TIME_ZONE=1
 -p 8081:8081 \
 --net=host \
 --name lunchmenu \
